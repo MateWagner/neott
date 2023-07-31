@@ -1,0 +1,14 @@
+main_switch = 0
+show = 'Color'
+effect_state = "STOP"
+wait = 0.1
+previous_state = 0
+red = 255
+green = 125
+blue = 255
+white = 0
+v_hex = '#ff80ff'
+pix_num = 0
+brightness = 1
+wheel = 0
+brightness_state = 1
