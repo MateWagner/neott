@@ -1,0 +1,16 @@
+NEOPIXEL:
+  NUM_PIXEL: 30
+  PIN: D18
+  ORDER: GRBW
+
+MQTT:
+  HOST: localhost
+  PORT: 1883
+  KEEP_ALIVE: 60
+  ROOT_TOPIC: home/floor3/room/iot-pi/
+  #need to implement
+  USER:
+  PASS:
+
+DEV:
+  DEBUG: true
