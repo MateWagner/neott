@@ -1,6 +1,6 @@
 import random
-import neopixel_provider as neo
-from data_types import ColorRgbw
+import strip.neopixel_provider as neo
+from utils.data_types import ColorRgbw
 
 
 def get_random_render_callback():

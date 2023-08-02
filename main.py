@@ -1,8 +1,8 @@
 from threading import Thread
 from queue import Queue
-from log_provider import log
-import neopixel_main
-from mqtt_client import mqttc
+from utils.log_provider import log
+import strip.neopixel_main as neopixel_main
+from mqtt.mqtt_client import mqttc
 
 log.info("Threads loading")
 

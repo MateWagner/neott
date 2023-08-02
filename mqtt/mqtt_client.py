@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
-from log_provider import log
-import config_parser
-from utils.mqtt_bridge import TOPIC_CALLBACK_MAP, initial_value_publisher
+from utils.log_provider import log
+import utils.config_parser as config_parser
+from mqtt.mqtt_bridge import TOPIC_CALLBACK_MAP, initial_value_publisher
 
 
 def on_connect(_client, _user_data, _flags, rc):

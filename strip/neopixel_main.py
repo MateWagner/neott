@@ -1,8 +1,8 @@
 import time
-import effect_lib as e
-from config_parser import NUM_PIXEL
-from log_provider import log
-from data_types import NeopixelControl, ColorRgbw, EffectControl
+import strip.effect_lib as e
+from utils.config_parser import NUM_PIXEL
+from utils.log_provider import log
+from utils.data_types import NeopixelControl, ColorRgbw, EffectControl
 
 
 def loop_forever(message_queue):

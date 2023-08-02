@@ -1,7 +1,7 @@
 import re
-import config_parser
-from log_provider import arrived_message
-from data_types import ColorRgbw, NeopixelControl
+import utils.config_parser as config_parser
+from utils.log_provider import arrived_message
+from utils.data_types import ColorRgbw, NeopixelControl
 
 
 def main_switch(client, message_queue, message):
