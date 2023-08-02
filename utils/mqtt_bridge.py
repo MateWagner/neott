@@ -1,44 +1,49 @@
 import re
 import config_parser
 from log_provider import arrived_message
+from data_types import ColorRgbw, NeopixelControl
 
 
 def main_switch(client, userdata, message):
-    userdata.put({
-        'main_switch': int(message.payload)
-    })
+    userdata.put(
+        {
+            'main_switch': message.payload.decode('utf-8'),
+            'effect_state': 'START',
+        }
+    )
     acknowledge_massage(client, message)
 
 
 def solid_color(client, userdata, message):
-    # TODO rgb W handling look over
+    string_payload = message.payload.decode('utf-8')
     red = 0
     green = 0
     blue = 0
     white = 0
 
-    string_payload = message.payload.decode('utf-8')
-
     if string_payload == '#FFFFFF' and 'W' in config_parser.ORDER.upper():
         white = 255
     else:
-        # implement here all of the color combination
         red = hex_to_rgb(string_payload)[0]
         green = hex_to_rgb(string_payload)[1]
         blue = hex_to_rgb(string_payload)[2]
 
-    userdata.put({
-        'red': red,
-        'green': green,
-        'blue': blue,
-        'white': white
-    })
+    userdata.put(
+        {
+            'dec_rgbw': ColorRgbw(red, green, blue, white),
+            'effect_state': 'START',
+        }
+    )
     acknowledge_massage(client, message)
 
 
-# TODO Typed callbacks for the non special chases
 def show_type(client, userdata, message):
-    userdata.put({'show_type': message.payload.decode('utf-8')})
+    userdata.put(
+        {
+            'show_type': message.payload.decode('utf-8'),
+            'effect_state': 'START'
+        }
+    )
     acknowledge_massage(client, message)
 
 
@@ -60,17 +65,16 @@ TOPIC_CALLBACK_MAP = {
     'brightness': brightness
 }
 
-"""Converts a HEX code into RGB or HSL.
-Args:
-    hx (str): Takes both short as well as long HEX codes.
-    hsl (bool): Converts the given HEX code into HSL value if True.
-Return:
-    Tuple of length 3 consisting of either int or float values.
-Raise:
-    ValueError: If given value is not a valid HEX code."""
-
 
 def hex_to_rgb(hx, hsl=False):
+    """Converts a HEX code into RGB or HSL.
+    Args:
+        hx (str): Takes both short as well as long HEX codes.
+        hsl (bool): Converts the given HEX code into HSL value if True.
+    Return:
+        Tuple of length 3 consisting of either int or float values.
+    Raise:
+        ValueError: If given value is not a valid HEX code."""
     # Thank you to: https://stackoverflow.com/questions/29643352/converting-hex-to-rgb-value-in-python
     if re.compile(r'#[a-fA-F0-9]{3}(?:[a-fA-F0-9]{3})?$').match(hx):
         div = 255.0 if hsl else 0
@@ -90,7 +94,7 @@ def acknowledge_massage(client, message):
 # update the Broker with the default values to the state topic with retain flag, when the program start
 # TODO
 def initial_value_publisher(mqtt_client):
-    print('TODO initial value synchronization thoth config')
+    initial_values = NeopixelControl()
     # mqtt_client.publish(config.ROOT_TOPIC + 'main_switch' +
     #                     '/state', str(global_vars.main_switch), retain=True)
     # mqtt_client.publish(config.ROOT_TOPIC + 'solid_color' + '/state',
