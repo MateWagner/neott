@@ -4,7 +4,7 @@ from collections import namedtuple
 ColorRgbw = namedtuple(
     'Color_rgbw', ['red', 'green', 'blue', 'white'], defaults=[0, 0, 0, 0])
 
-default_color = ColorRgbw(255, 80, 255,)
+default_color = ColorRgbw(255, 125, 255,)
 
 NeopixelControl = namedtuple('Variables', [
     'main_switch',
@@ -12,6 +12,7 @@ NeopixelControl = namedtuple('Variables', [
     'effect_state',
     'wait',
     'dec_rgbw',
+    'hex_rgb',
     'brightness',],
     defaults=[
         'OFF',
@@ -19,6 +20,7 @@ NeopixelControl = namedtuple('Variables', [
         'STOP',
         0.1,
         default_color,
+        '#ff80ff',
         1
 ])
 

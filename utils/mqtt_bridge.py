@@ -4,8 +4,8 @@ from log_provider import arrived_message
 from data_types import ColorRgbw, NeopixelControl
 
 
-def main_switch(client, userdata, message):
-    userdata.put(
+def main_switch(client, message_queue, message):
+    message_queue.put(
         {
             'main_switch': message.payload.decode('utf-8'),
             'effect_state': 'START',
@@ -14,7 +14,7 @@ def main_switch(client, userdata, message):
     acknowledge_massage(client, message)
 
 
-def solid_color(client, userdata, message):
+def solid_color(client, message_queue, message):
     string_payload = message.payload.decode('utf-8')
     red = 0
     green = 0
@@ -28,7 +28,7 @@ def solid_color(client, userdata, message):
         green = hex_to_rgb(string_payload)[1]
         blue = hex_to_rgb(string_payload)[2]
 
-    userdata.put(
+    message_queue.put(
         {
             'dec_rgbw': ColorRgbw(red, green, blue, white),
             'effect_state': 'START',
@@ -37,8 +37,8 @@ def solid_color(client, userdata, message):
     acknowledge_massage(client, message)
 
 
-def show_type(client, userdata, message):
-    userdata.put(
+def show_type(client, message_queue, message):
+    message_queue.put(
         {
             'show_type': message.payload.decode('utf-8'),
             'effect_state': 'START'
@@ -47,13 +47,13 @@ def show_type(client, userdata, message):
     acknowledge_massage(client, message)
 
 
-def wait(client, userdata, message):
-    userdata.put({'wait': float(message.payload)})
+def wait(client, message_queue, message):
+    message_queue.put({'wait': float(message.payload)})
     acknowledge_massage(client, message)
 
 
-def brightness(client, userdata, message):
-    userdata.put({'brightness': float(message.payload)})
+def brightness(client, message_queue, message):
+    message_queue.put({'brightness': float(message.payload)})
     acknowledge_massage(client, message)
 
 
@@ -92,16 +92,15 @@ def acknowledge_massage(client, message):
 
 
 # update the Broker with the default values to the state topic with retain flag, when the program start
-# TODO
 def initial_value_publisher(mqtt_client):
     initial_values = NeopixelControl()
-    # mqtt_client.publish(config.ROOT_TOPIC + 'main_switch' +
-    #                     '/state', str(global_vars.main_switch), retain=True)
-    # mqtt_client.publish(config.ROOT_TOPIC + 'solid_color' + '/state',
-    #                     str(global_vars.v_hex), retain=True)
-    # mqtt_client.publish(config.ROOT_TOPIC + 'show_type' +
-    #                     '/state', str(global_vars.show), retain=True)
-    # mqtt_client.publish(config.ROOT_TOPIC + 'wait' + '/state',
-    #                     str(global_vars.wait), retain=True)
-    # mqtt_client.publish(config.ROOT_TOPIC + 'brightness' +
-    #                     '/state', str(global_vars.brightness), retain=True)
+    mqtt_client.publish(f'{config_parser.ROOT_TOPIC}main_switch/state',
+                        str(initial_values.main_switch), retain=True)
+    mqtt_client.publish(f'{config_parser.ROOT_TOPIC}solid_color/state',
+                        str(initial_values.hex_rgb), retain=True)
+    mqtt_client.publish(f'{config_parser.ROOT_TOPIC}show_type/state',
+                        str(initial_values.show_type), retain=True)
+    mqtt_client.publish(f'{config_parser.ROOT_TOPIC}wait/state',
+                        str(initial_values.wait), retain=True)
+    mqtt_client.publish(f'{config_parser.ROOT_TOPIC}brightness/state',
+                        str(initial_values.brightness), retain=True)
