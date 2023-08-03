@@ -1,48 +1,14 @@
-import random
-import strip.neopixel_provider as neo
+from utils.config_parser import NUM_PIXEL
 from utils.data_types import ColorRgbw
 
 
-def get_random_render_callback():
-    i = random.randint(0, 1)
-    if i == 0:
-        return transition_left_to_right
-    elif i == 1:
-        return transition_right_to_left
-
-
-def transition_left_to_right(neo_buffer, effect_cycle_index, effect_state):
-    pixel_index = effect_cycle_index
-    if effect_state == 'START':
-        pixel_index = 0
-
-    rgbw = neo_buffer[pixel_index]
-
-    neo.pixels[pixel_index] = ((rgbw.red, rgbw.green, rgbw.blue, rgbw.white))
-    neo.pixels.show()
-    return pixel_index + 1, "STOP" if pixel_index == neo.pixels.n-1 else "RUN"
-
-
-def transition_right_to_left(neo_buffer, effect_cycle_index, effect_state):
-    pixel_index = effect_cycle_index
-    if effect_state == 'START':
-        pixel_index = neo.pixels.n-1
-
-    rgbw = neo_buffer[pixel_index]
-
-    neo.pixels[pixel_index] = ((rgbw.red, rgbw.green, rgbw.blue, rgbw.white))
-    neo.pixels.show()
-    return pixel_index - 1, "STOP" if pixel_index == 0 else "RUN"
-
-
-def brightness(value):
-    neo.pixels.brightness = value
-    neo.pixels.show()
+def fill_with_one_color(color_values):
+    return [color_values for i in range(NUM_PIXEL)]
 
 
 def rainbow_cycle(neo_buffer, wheel_pos):
-    for pixel in range(neo.pixels.n):
-        pixel_index = (pixel * 256 // neo.pixels.n) + wheel_pos
+    for pixel in range(NUM_PIXEL):
+        pixel_index = (pixel * 256 // NUM_PIXEL) + wheel_pos
         color = wheel(pixel_index & 255)
         neo_buffer[pixel] = color
 

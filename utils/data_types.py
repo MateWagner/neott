@@ -27,13 +27,11 @@ NeopixelControl = namedtuple('Variables', [
 
 EffectControl = namedtuple('RunVariables', [
     'effect_cycle_index',
-    'brightness_state',
     'previous_main_switch_state',
     'wheel_pos',
     'render_callback',],
     defaults=[
         0,
-        1.0,
         0,
         0,
         None,

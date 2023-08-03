@@ -7,11 +7,11 @@ from utils.data_types import ColorRgbw, NeopixelControl
 def main_switch(client, message_queue, message):
     message_queue.put(
         {
-            'main_switch': message.payload.decode('utf-8'),
+            'main_switch': message.payload.decode('utf-8').upper(),
             'effect_state': 'START',
         }
     )
-    acknowledge_massage(client, message)
+    acknowledge_message(client, message)
 
 
 def solid_color(client, message_queue, message):
@@ -34,27 +34,27 @@ def solid_color(client, message_queue, message):
             'effect_state': 'START',
         }
     )
-    acknowledge_massage(client, message)
+    acknowledge_message(client, message)
 
 
 def show_type(client, message_queue, message):
     message_queue.put(
         {
-            'show_type': message.payload.decode('utf-8'),
+            'show_type': message.payload.decode('utf-8').upper(),
             'effect_state': 'START'
         }
     )
-    acknowledge_massage(client, message)
+    acknowledge_message(client, message)
 
 
 def wait(client, message_queue, message):
     message_queue.put({'wait': float(message.payload)})
-    acknowledge_massage(client, message)
+    acknowledge_message(client, message)
 
 
 def brightness(client, message_queue, message):
     message_queue.put({'brightness': float(message.payload)})
-    acknowledge_massage(client, message)
+    acknowledge_message(client, message)
 
 
 TOPIC_CALLBACK_MAP = {
@@ -86,7 +86,7 @@ def hex_to_rgb(hx, hsl=False):
     raise ValueError(f'"{hx}" is not a valid HEX code.')
 
 
-def acknowledge_massage(client, message):
+def acknowledge_message(client, message):
     arrived_message(message)
     client.publish(message.topic + '/state', message.payload, retain=True)
 
