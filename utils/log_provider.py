@@ -1,5 +1,5 @@
 import logging
-# TODO maybe can integrate into mqtt client 
+# TODO maybe can integrate into mqtt client
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s %(levelname)s %(message)s",
@@ -10,6 +10,5 @@ log = logging.getLogger(__name__)
 
 
 def arrived_message(message):
-    log.debug(
-        f'Received message {message.payload} on topic {message.topic} with QoS {message.qos}'
-    )
+    log.debug('Received message %s on topic %s with QoS %s',
+              message.payload, message.topic, message.qos)
