@@ -81,7 +81,7 @@ def render_next_pixel(neopixel_control, effect_control, buffer_copy, is_consecut
     effect_control = effect_control._replace(
         effect_cycle_index=new_index)
 
-    if neopixel_control.neopixel_control != state:
+    if neopixel_control.effect_state != state:
         neopixel_control = neopixel_control._replace(
             effect_state=state)
 
