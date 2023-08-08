@@ -1,5 +1,7 @@
+import json
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
+from utils.data_types import NeopixelControl
 
 flask_app = Flask(__name__)
 flask_app.config['SECRET_KEY'] = 'secret!'
@@ -13,15 +15,21 @@ def run_flask():
 
 
 @flask_app.get('/')
-def hello():
+def index():
     return render_template("index.html")
 
 
-@socket.on('data')
+@socket.on('return-data')
 def handle_message(data):
     print('received message: ' + data)
 
 
 @socket.on('connect')
 def test_connect(auth):
+    # TODO send current status
     emit('my response', {'data': 'Connected'})
+
+
+def send_msg(message):
+    topic = message.topic.split('/')[-1]
+    socket.emit(topic, message.payload.decode('utf-8'))
