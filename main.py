@@ -1,19 +1,20 @@
-from threading import Thread
+from threading import Thread, Lock
 from queue import Queue
 from utils.log_provider import log
+from utils.data_types import NeopixelControl
 import web.flask_main as web
 import strip.neopixel_main as neopixel_main
-from mqtt.mqtt_client import mqttc
+from mqtt.mqtt_client import start_loop, mqttc
 
 log.info("Threads loading")
+lock = Lock()
+state = NeopixelControl(lock)
 
-message_queue = Queue()
-
-mqtt = Thread(target=mqttc.loop_forever, args=(1,))
-neopixel = Thread(target=neopixel_main.loop_forever, args=(message_queue,))
-flask = Thread(target=web.run_flask)
+mqtt = Thread(target=start_loop, args=(state,))
+neopixel = Thread(target=neopixel_main.loop_forever, args=(state,))
+flask = Thread(target=web.run_flask, args=(state,))
 
 mqtt.start()
-mqttc.user_data_set(message_queue)
+mqttc.user_data_set(state)
 neopixel.start()
 flask.start()
