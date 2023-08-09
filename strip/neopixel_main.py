@@ -2,11 +2,11 @@ import time
 import strip.effect_lib as effects
 import strip.render_lib as render
 from utils.log_provider import log
-from utils.data_types import NeopixelControls, ColorRgbw, EffectControl
+from utils.data_types import ColorRgbw, EffectControl, SystemState
 from utils.value_converter import get_rgbw
 
 
-def loop_forever(state):
+def loop_forever(state: SystemState):
     log.info('Neopixel start')
 
     effect_control = EffectControl(
@@ -14,7 +14,7 @@ def loop_forever(state):
 
     while True:
 
-        process_event_and_start_effect(state, effect_control)
+        render_interrupt_event_and_start(state, effect_control)
 
         log.debug('Neopixel: Show Type: %s Effect State: %s render on Index: %s',
                   state.show_type,  effect_control.effect_state, effect_control.effect_cycle_index)
@@ -27,38 +27,36 @@ def loop_forever(state):
             if state.show_type == 'COLOR' or state.main_switch == 'OFF':
                 handle_solid_color_and_off(state, effect_control)
 
-            # if neopixel_control.show_type == 'RAINBOW' and neopixel_control.main_switch == 'ON':
-            #     neopixel_control, effect_control, neo_buffer = handle_rainbow_cycle(
-            #         neopixel_control, effect_control, neo_buffer)
+            if state.show_type == 'RAINBOW' and state.main_switch == 'ON':
+                handle_rainbow_cycle(effect_control)
 
             # sleep time on active render between pixels
             time.sleep(state.wait)
 
         else:
-            #  TODO TEST state.trigger_event.wait()  process_event_and_start_effect(state, effect_control) should stop the loop and put in sleep while the signal is arriving
-            time.sleep(3)
+            #  TODO TEST
+            log.info('Neopixel finished with task waiting to trigger')
+            with state.lock:
+                state.loop_sleep_event.set()
+            state.wake_up_event.wait()
+            with state.lock:
+                state.wake_up_event.clear()
 
 
-def process_event_and_start_effect(state, effect_control):
-    if state.trigger_event.is_set():
+def render_interrupt_event_and_start(state, effect_control):
+    if state.render_interrupt_event.is_set():
         with state.lock:
-            state.trigger_event.clear()
+            state.render_interrupt_event.clear()
         effect_control.effect_state = 'START'
 
 
-# def handle_rainbow_cycle(neopixel_control, effect_control, neo_buffer):
-#     buffer_copy = copy.deepcopy(neo_buffer)
-#     if neopixel_control.effect_state == 'START':
-#         effect_control = get_random_callback(effect_control)
-#         buffer_copy, wheel_pos = effects.rainbow_cycle(
-#             buffer_copy, effect_control.wheel_pos)
-#         effect_control = effect_control._replace(
-#             wheel_pos=wheel_pos)
+def handle_rainbow_cycle(effect_control):
+    if effect_control.effect_state == 'START':
+        effect_control.render_callback = render.get_random_callback()
 
-#     neopixel_control, effect_control = render_next_pixel(
-#         neopixel_control, effect_control, buffer_copy, True)
+    effects.rainbow_cycle(effect_control)
 
-#     return neopixel_control, effect_control, buffer_copy
+    render_next_pixel(effect_control, True)
 
 
 def handle_solid_color_and_off(state, effect_control):
@@ -71,16 +69,6 @@ def handle_solid_color_and_off(state, effect_control):
 
 def render_next_pixel(effect_control, is_consecutive):
     effect_control.render_callback(effect_control, is_consecutive)
-
-
-def update_variables(message_queue, neopixel_control):
-    variables_copy = neopixel_control._asdict()
-    for topic_name, value in message_queue.get().items():
-        log.info('Update arrived on: %s topic, value: %s', topic_name, value)
-        variables_copy[topic_name] = value
-
-    message_queue.task_done()
-    return NeopixelControls(**variables_copy)
 
 
 def fill_neo_buffer(state):

@@ -51,6 +51,9 @@ def start_loop(state):
     with state.lock:
         state.mqtt_message_callback = send_update_to_broker
 
+    # update the Broker with the default values to the state topic with retain flag, when the program start
+    initial_value_publisher(mqttc, state)
+    mqttc.user_data_set(state)
     mqttc.loop_forever(1)
 
 
@@ -75,11 +78,7 @@ def mqtt_client():
 
     # Subscribe loop
     subscribe_to_topic_loop(client)
-
     register_topic_callbacks(client)
-
-    # update the Broker with the default values to the state topic with retain flag, when the program start
-    initial_value_publisher(client)
 
     return client
 

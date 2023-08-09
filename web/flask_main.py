@@ -1,15 +1,19 @@
 import json
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
-from utils.data_types import NeopixelControl
+from utils.data_types import SystemState
 
 flask_app = Flask(__name__)
 flask_app.config['SECRET_KEY'] = 'secret!'
 socket = SocketIO(flask_app, cors_allowed_origins="*",
                   logger=True, engineio_logger=True)
+STATE = None
 
 
-def run_flask():
+def run_flask(system_state: SystemState):
+    STATE = system_state
+    with STATE.lock:
+        STATE.websocket_out_callback = send_msg
     socket.run(flask_app, host='0.0.0.0', port=5000, debug=True,
                use_reloader=False)
 
@@ -21,6 +25,8 @@ def index():
 
 @socket.on('return-data')
 def handle_message(data):
+
+    print('parse json', json.loads(data))
     print('received message: ' + data)
 
 
