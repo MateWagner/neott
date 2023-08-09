@@ -39,8 +39,9 @@ EffectControls = namedtuple('RunVariables', [
 
 
 class NeopixelControl:
-    def __init__(self, lock):
+    def __init__(self, lock, trigger_event):
         self.lock = lock
+        self.trigger_event = trigger_event
         self.main_switch = 'OFF'
         self.show_type = 'COLOR'
         self.wait = 0.1
@@ -51,9 +52,10 @@ class NeopixelControl:
 
 
 class EffectControl:
-    def __init__(self, render_callback):
+    def __init__(self, render_callback, neo_buffer):
         self.effect_cycle_index = 0
         self.previous_main_switch_state = 0
         self.wheel_pos = 0
         self.render_callback = render_callback
         self.effect_state = "STOP"
+        self.neo_buffer = neo_buffer
