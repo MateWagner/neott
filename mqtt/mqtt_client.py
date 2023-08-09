@@ -47,7 +47,19 @@ def register_topic_callbacks(client):
             config_parser.ROOT_TOPIC + topic_name, callback)
 
 
-def init_mqtt_client():
+def start_loop(state):
+    with state.lock:
+        state.mqtt_message_callback = send_update_to_broker
+
+    mqttc.loop_forever(1)
+
+
+def send_update_to_broker(topic, message):
+    mqttc.publish(f'{config_parser.ROOT_TOPIC}{topic}/state',
+                  message, retain=True)
+
+
+def mqtt_client():
     client = mqtt.Client()
     client.on_message = on_message
     client.on_connect = on_connect
@@ -72,4 +84,4 @@ def init_mqtt_client():
     return client
 
 
-mqttc = init_mqtt_client()
+mqttc = mqtt_client()
