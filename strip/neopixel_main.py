@@ -3,10 +3,11 @@ import copy
 import strip.effect_lib as effects
 import strip.render_lib as render
 from utils.log_provider import log
-from utils.data_types import NeopixelControl, ColorRgbw, EffectControl
+from utils.data_types import NeopixelControls, ColorRgbw, EffectControl
+from utils.value_converter import get_rgbw
 
 
-def loop_forever(message_queue):
+def loop_forever(state):
     """neopixel main control loop
 
     Args:
@@ -14,78 +15,65 @@ def loop_forever(message_queue):
     """
     log.info('Neopixel start')
 
-    neopixel_control = NeopixelControl()
-    effect_control = EffectControl()
-    neo_buffer = fill_neo_buffer(neopixel_control)
+    effect_control = EffectControl(render.get_random_callback())
+
+    neo_buffer = fill_neo_buffer(state)
 
     while True:
 
-        if not message_queue.empty():
-            neopixel_control = update_variables(
-                message_queue, neopixel_control)
-
         log.debug('Neopixel: Show Type: %s Effect State: %s render on Index: %s',
-                  neopixel_control.show_type, neopixel_control.effect_state, effect_control.effect_cycle_index)
+                  state.show_type,  effect_control.effect_state, effect_control.effect_cycle_index)
 
         # set brightness
-        render.set_brightness(neopixel_control.brightness)
+        render.set_brightness(state.brightness)
 
-        if neopixel_control.effect_state != 'STOP':
+        if effect_control.effect_state != 'STOP':
 
-            if neopixel_control.show_type == 'COLOR' or neopixel_control.main_switch == 'OFF':
-                neopixel_control, effect_control, neo_buffer = handle_solid_color_and_off(
-                    neopixel_control, effect_control, neo_buffer)
+            if state.show_type == 'COLOR' or state.main_switch == 'OFF':
+                neo_buffer = handle_solid_color_and_off(
+                    state, effect_control, neo_buffer)
 
-            if neopixel_control.show_type == 'RAINBOW' and neopixel_control.main_switch == 'ON':
-                neopixel_control, effect_control, neo_buffer = handle_rainbow_cycle(
-                    neopixel_control, effect_control, neo_buffer)
+            # if neopixel_control.show_type == 'RAINBOW' and neopixel_control.main_switch == 'ON':
+            #     neopixel_control, effect_control, neo_buffer = handle_rainbow_cycle(
+            #         neopixel_control, effect_control, neo_buffer)
 
             # sleep time on active render between pixels
-            time.sleep(neopixel_control.wait)
+            time.sleep(state.wait)
 
         else:
             time.sleep(3)
 
 
-def handle_rainbow_cycle(neopixel_control, effect_control, neo_buffer):
-    buffer_copy = copy.deepcopy(neo_buffer)
-    if neopixel_control.effect_state == 'START':
-        effect_control = get_random_callback(effect_control)
-        buffer_copy, wheel_pos = effects.rainbow_cycle(
-            buffer_copy, effect_control.wheel_pos)
-        effect_control = effect_control._replace(
-            wheel_pos=wheel_pos)
+# def handle_rainbow_cycle(neopixel_control, effect_control, neo_buffer):
+#     buffer_copy = copy.deepcopy(neo_buffer)
+#     if neopixel_control.effect_state == 'START':
+#         effect_control = get_random_callback(effect_control)
+#         buffer_copy, wheel_pos = effects.rainbow_cycle(
+#             buffer_copy, effect_control.wheel_pos)
+#         effect_control = effect_control._replace(
+#             wheel_pos=wheel_pos)
 
-    neopixel_control, effect_control = render_next_pixel(
-        neopixel_control, effect_control, buffer_copy, True)
+#     neopixel_control, effect_control = render_next_pixel(
+#         neopixel_control, effect_control, buffer_copy, True)
 
-    return neopixel_control, effect_control, buffer_copy
-
-
-def handle_solid_color_and_off(neopixel_control, effect_control, neo_buffer):
-    buffer_copy = copy.deepcopy(neo_buffer)
-    if neopixel_control.effect_state == 'START':
-        effect_control = get_random_callback(effect_control)
-        buffer_copy = fill_neo_buffer(neopixel_control)
-
-    neopixel_control, effect_control = render_next_pixel(
-        neopixel_control, effect_control, buffer_copy, False)
-
-    return neopixel_control, effect_control, buffer_copy
+#     return neopixel_control, effect_control, buffer_copy
 
 
-def render_next_pixel(neopixel_control, effect_control, buffer_copy, is_consecutive):
-    new_index, state = effect_control.render_callback(
-        buffer_copy, effect_control.effect_cycle_index, neopixel_control.effect_state, is_consecutive)
+def handle_solid_color_and_off(state, effect_control, neo_buffer):
+    buffer = neo_buffer
 
-    effect_control = effect_control._replace(
-        effect_cycle_index=new_index)
+    if effect_control.effect_state == 'START':
+        effect_control.render_callback = render.get_random_callback()
+        buffer = fill_neo_buffer(state)
 
-    if neopixel_control.effect_state != state:
-        neopixel_control = neopixel_control._replace(
-            effect_state=state)
+    render_next_pixel(effect_control, buffer, False)
 
-    return neopixel_control, effect_control
+    return effect_control, buffer
+
+
+def render_next_pixel(effect_control, neo_buffer, is_consecutive):
+    effect_control.render_callback(
+        neo_buffer, effect_control, is_consecutive)
 
 
 def update_variables(message_queue, neopixel_control):
@@ -95,15 +83,10 @@ def update_variables(message_queue, neopixel_control):
         variables_copy[topic_name] = value
 
     message_queue.task_done()
-    return NeopixelControl(**variables_copy)
+    return NeopixelControls(**variables_copy)
 
 
-def fill_neo_buffer(neopixel_control):
+def fill_neo_buffer(state):
     return (effects.fill_with_one_color(ColorRgbw())
-            if neopixel_control.main_switch == 'OFF'
-            else effects.fill_with_one_color(neopixel_control.dec_rgbw))
-
-
-def get_random_callback(effect_control):
-    return effect_control._replace(
-        render_callback=render.get_random_callback())
+            if state.main_switch == 'OFF'
+            else effects.fill_with_one_color(get_rgbw(state.hex_rgb)))
