@@ -1,34 +1,12 @@
-const socket = io(); // This creates a WebSocket connection to the server
-const topics = {
-  main_switch: "main_switch",
-  solid_color: "solid_color",
-  show_type: "show_type",
-  wait: "wait",
-  brightness: "brightness",
-};
-// Event listener for receiving messages from the server
-socket.on("message", (data) => {
-  const messagesDiv = document.getElementById("messages");
-  messagesDiv.innerHTML += `<p>${data}</p>`;
-});
-
-socket.on(topics.brightness, (data) => {
-  const brightness = document.getElementById("brightness");
-  brightness.value = data;
-});
-
-socket.on(topics.wait, (data) => {
-  const wait = document.getElementById("wait");
-  wait.value = data;
-});
-
-// Event listener for sending messages to the server
-function sendMessage() {
-  const message = prompt("Enter your message:");
-  socket.emit("message", message);
+function arriveEvent(socket, topic) {
+  socket.on(String(topic), (data) => {
+    const item = document.getElementById(String(topic));
+    item.value = data;
+  });
 }
 
-function returnData(event) {
+// Event listener for sending messages to the server
+function returnData(socket, event) {
   const topicName = event.target.id;
   const value = isNaN(event.target.value)
     ? event.target.value
@@ -36,15 +14,23 @@ function returnData(event) {
   socket.emit("return-data", JSON.stringify({ [topicName]: value }));
 }
 
-function subscribeToEvents(topic) {
+function returnEvent(socket, topic) {
   const item = document.getElementById(String(topic));
-  item.addEventListener("change", returnData);
+  item.addEventListener("change", (e) => returnData(socket, e));
 }
 
 function init() {
+  const socket = io();
+  const topics = {
+    main_switch: "main_switch",
+    solid_color: "solid_color",
+    show_type: "show_type",
+    wait: "wait",
+    brightness: "brightness",
+  };
   for (const topic of Object.values(topics)) {
-    console.log(topic);
-    subscribeToEvents(topic);
+    returnEvent(socket, topic);
+    arriveEvent(socket, topic);
   }
 }
 
