@@ -11,7 +11,7 @@ function returnData(socket, event) {
   const value = isNaN(event.target.value)
     ? event.target.value
     : Number(event.target.value);
-  socket.emit("return-data", JSON.stringify({ [topicName]: value }));
+  socket.emit(topicName, value);
 }
 
 function returnEvent(socket, topic) {
@@ -23,7 +23,7 @@ function init() {
   const socket = io();
   const topics = {
     main_switch: "main_switch",
-    solid_color: "solid_color",
+    hex_rgb: "hex_rgb",
     show_type: "show_type",
     wait: "wait",
     brightness: "brightness",

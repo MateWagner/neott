@@ -8,7 +8,7 @@ def main_switch(client, state: SystemState, message):
     acknowledge_message(client, message, state)
 
 
-def solid_color(client, state: SystemState, message):
+def hex_rgb(client, state: SystemState, message):
     state.hex_rgb = message.payload.decode('utf-8')
     acknowledge_message(client, message, state)
 
@@ -30,7 +30,7 @@ def brightness(client, state: SystemState, message):
 
 TOPIC_CALLBACK_MAP = {
     'main_switch': main_switch,
-    'solid_color': solid_color,
+    'hex_rgb': hex_rgb,
     'show_type': show_type,
     'wait': wait,
     'brightness': brightness
@@ -47,7 +47,7 @@ def acknowledge_message(client, message, state: SystemState):
 def initial_value_publisher(mqtt_client, state):
     mqtt_client.publish(f'{config_parser.ROOT_TOPIC}main_switch/state',
                         str(state.main_switch), retain=True)
-    mqtt_client.publish(f'{config_parser.ROOT_TOPIC}solid_color/state',
+    mqtt_client.publish(f'{config_parser.ROOT_TOPIC}hex_rgb/state',
                         str(state.hex_rgb), retain=True)
     mqtt_client.publish(f'{config_parser.ROOT_TOPIC}show_type/state',
                         str(state.show_type), retain=True)

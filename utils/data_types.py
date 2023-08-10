@@ -1,5 +1,5 @@
 from collections import namedtuple
-from threading import Event
+from threading import Event, Lock
 
 ColorRgbw = namedtuple(
     'Color_rgbw', ['red', 'green', 'blue', 'white'], defaults=[0, 0, 0, 0])
@@ -39,18 +39,18 @@ EffectControls = namedtuple('RunVariables', [
 
 
 class SystemState:
-    def __init__(self, lock, render_interrupt_event, wake_up_event, loop_sleep_event):
-        self.lock = lock
-        self.render_interrupt_event: Event = render_interrupt_event
-        self.wake_up_event: Event = wake_up_event
-        self.loop_sleep_event: Event = loop_sleep_event
+    def __init__(self, send_update_to_mqtt, send_update_to_websocket):
+        self.lock: Lock = Lock()
+        self.render_interrupt_event: Event = Event()
+        self.wake_up_event: Event = Event()
+        self.loop_sleep_event: Event = Event()
         self._main_switch = 'OFF'
         self._show_type = 'COLOR'
         self._wait = 0.1
         self._hex_rgb = "#ff80ff"
         self._brightness = 1.0
-        self.mqtt_out_callback = None
-        self.websocket_out_callback = None
+        self._send_update_to_mqtt = send_update_to_mqtt
+        self._send_update_to_websocket = send_update_to_websocket
 
     @property
     def main_switch(self):
@@ -103,7 +103,11 @@ class SystemState:
 
     def send_message_to_websocket(self, message):
         with self.lock:
-            self.websocket_out_callback(message)
+            self._send_update_to_websocket(message)
+
+    def send_message_to_mqtt(self, topic, data):
+        with self.lock:
+            self._send_update_to_mqtt(topic, data)
 
     def _induce_render_cycle(self):
         self.render_interrupt_event.set()
@@ -113,6 +117,13 @@ class SystemState:
         if self.loop_sleep_event.is_set():
             self.loop_sleep_event.clear()
             self.wake_up_event.set()
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        with self.lock:
+            setattr(self, key, value)
 
 
 class EffectControl:
