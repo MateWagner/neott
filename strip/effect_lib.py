@@ -6,13 +6,13 @@ def fill_with_one_color(color_values):
     return [color_values for i in range(NUM_PIXEL)]
 
 
-def rainbow_cycle(neo_buffer, wheel_pos):
+def rainbow_cycle(effect_control):
     for pixel in range(NUM_PIXEL):
-        pixel_index = (pixel * 256 // NUM_PIXEL) + wheel_pos
+        pixel_index = (pixel * 256 // NUM_PIXEL) + effect_control.wheel_pos
         color = wheel(pixel_index & 255)
-        neo_buffer[pixel] = color
+        effect_control.neo_buffer[pixel] = color
 
-    return neo_buffer, ((wheel_pos+1) & 255)
+    effect_control.wheel_pos = ((effect_control.wheel_pos+1) & 255)
 
 
 def wheel(pos):

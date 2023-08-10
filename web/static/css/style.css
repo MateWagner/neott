@@ -1,0 +1,9 @@
+button {
+  color: aqua;
+}
+
+.card {
+  background-color: aliceblue;
+  border-radius: 20px;
+  max-width: fit-content;
+}
