@@ -6,37 +6,6 @@ ColorRgbw = namedtuple(
 
 default_color = ColorRgbw(255, 125, 255,)
 
-NeopixelControls = namedtuple('Variables', [
-    'main_switch',
-    'show_type',
-    'effect_state',
-    'wait',
-    'dec_rgbw',
-    'hex_rgb',
-    'brightness',],
-    defaults=[
-        'OFF',
-        'COLOR',
-        'STOP',
-        0.1,
-        default_color,
-        '#ff80ff',
-        1
-])
-
-
-EffectControls = namedtuple('RunVariables', [
-    'effect_cycle_index',
-    'previous_main_switch_state',
-    'wheel_pos',
-    'render_callback',],
-    defaults=[
-        0,
-        0,
-        0,
-        None,
-])
-
 
 class SystemState:
     def __init__(self, send_update_to_mqtt, send_update_to_websocket):
