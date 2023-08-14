@@ -34,7 +34,6 @@ def loop_forever(state: SystemState):
             time.sleep(state.wait)
 
         else:
-            #  TODO TEST
             log.info('Neopixel finished with task waiting to trigger')
             with state.lock:
                 state.loop_sleep_event.set()
@@ -53,8 +52,7 @@ def render_interrupt_event_and_start(state, effect_control):
 def handle_rainbow_cycle(effect_control):
     if effect_control.effect_state == 'START':
         effect_control.render_callback = render.get_random_callback()
-
-    effects.rainbow_cycle(effect_control)
+        effects.rainbow_cycle(effect_control)
 
     render_next_pixel(effect_control, True)
 
