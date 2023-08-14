@@ -19,10 +19,44 @@ function returnEvent(socket, topic) {
   item.addEventListener("change", (e) => returnData(socket, e));
 }
 
+function handleMainSwitch(socket) {
+  const mainSwitch = document.getElementById("main_switch");
+  mainSwitch.addEventListener("change", (e) => {
+    const switchState = e.target.checked ? "ON" : "OFF";
+    socket.emit("main_switch", switchState);
+  });
+  socket.on("main_switch", (data) => {
+    mainSwitch.checked = data === "ON";
+  });
+}
+
+function setTheme(isDark) {
+  const body = document.getElementsByTagName("body")[0];
+  body.setAttribute("data-bs-theme", isDark ? "dark" : "light");
+}
+
+function handleThemeChange() {
+  window
+    .matchMedia("(prefers-color-scheme: dark)")
+    .addEventListener("change", ({ matches }) => {
+      if (matches) {
+        setTheme(true);
+      } else {
+        setTheme(false);
+      }
+    });
+}
+
+function getSystemTheme() {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
 function init() {
   const socket = io();
+  setTheme(getSystemTheme());
+  handleThemeChange();
+  handleMainSwitch(socket);
   const topics = {
-    main_switch: "main_switch",
     hex_rgb: "hex_rgb",
     show_type: "show_type",
     wait: "wait",

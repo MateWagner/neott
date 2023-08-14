@@ -1,8 +1,8 @@
-from flask import Flask, render_template
+from flask import Flask
 from flask_socketio import SocketIO, emit
 from utils.data_types import SystemState
 
-flask_app = Flask(__name__)
+flask_app = Flask(__name__, static_url_path='')
 flask_app.config['SECRET_KEY'] = 'secret!'
 socket = SocketIO(flask_app, cors_allowed_origins="*",
                   logger=True, engineio_logger=True)
@@ -12,7 +12,7 @@ def run_flask(state: SystemState):
 
     @flask_app.get('/')
     def index():
-        return render_template("index.html")
+        return flask_app.send_static_file("index.html")
 
     @socket.on('main_switch')
     def incoming_main_switch(data):
@@ -23,6 +23,7 @@ def run_flask(state: SystemState):
     def incoming_hex_rgb(data):
         state.hex_rgb = data
         state.send_message_to_mqtt('hex_rgb', data)
+        emit('hex_rgb', data)
 
     @socket.on('brightness')
     def incoming_brightness(data):
