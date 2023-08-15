@@ -104,17 +104,9 @@
           [Install]
           WantedBy=multi-user.target
         dest: /etc/systemd/system/neott.service
-      notify:
-        - Reload systemd
 
     - name: Start and enable the NeoTT service
       systemd:
         name: neott
         enabled: yes
         state: started
-
-  handlers:
-    - name: Reload systemd
-      systemd:
-        name: neott
-        state: reloaded
