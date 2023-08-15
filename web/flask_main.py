@@ -49,7 +49,7 @@ def run_flask(state: SystemState):
         emit('show_type', state.show_type)
 
     socket.run(flask_app, host='0.0.0.0', port=5000, debug=True,
-               use_reloader=False)
+               use_reloader=False,  allow_unsafe_werkzeug=True)
 
 
 def send_update_to_websocket(message):
