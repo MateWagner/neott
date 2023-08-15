@@ -1,0 +1,57 @@
+- name: Install Mosquitto on Debian Bullseye
+  hosts: pi
+  become: true
+  tasks:
+    - name: Import the Mosquitto repository package signing key
+      apt_key:
+        url: http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
+        state: present
+
+    - name: Add the Mosquitto repository
+      apt_repository:
+        repo: "deb http://repo.mosquitto.org/debian bullseye main"
+        state: present
+
+    - name: Update apt information
+      apt:
+        update_cache: yes
+
+    - name: Install Mosquitto package
+      apt:
+        name: mosquitto
+        state: present
+
+    - name: Install Mosquitto client
+      apt:
+        name: mosquitto-clients
+        state: present
+
+    - name: Enable Mosquitto service
+      service:
+        name: mosquitto
+        enabled: yes
+        state: started
+
+    - name: Stop Mosquitto service
+      service:
+        name: mosquitto
+        state: stopped
+
+    - name: Create Mosquitto config folder if it doesn't exist
+      file:
+        path: /etc/mosquitto/conf.d
+        state: directory
+        mode: "0755"
+
+    - name: Create the config.conf file
+      copy:
+        dest: /etc/mosquitto/conf.d/config.conf
+        content: |
+          listener 1883
+          allow_anonymous true
+        mode: "0644"
+
+    - name: Start Mosquitto service
+      service:
+        name: mosquitto
+        state: started
