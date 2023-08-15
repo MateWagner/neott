@@ -23,10 +23,12 @@ function handleMainSwitch(socket) {
   const mainSwitch = document.getElementById("main_switch");
   mainSwitch.addEventListener("change", (e) => {
     const switchState = e.target.checked ? "ON" : "OFF";
+    changeMainSwichIcon(e.target.checked)
     socket.emit("main_switch", switchState);
   });
   socket.on("main_switch", (data) => {
     mainSwitch.checked = data === "ON";
+    changeMainSwichIcon(data === "ON")
   });
 }
 
@@ -49,6 +51,18 @@ function handleThemeChange() {
 
 function getSystemTheme() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+function changeMainSwichIcon(isOn) {
+  const onIcon = document.getElementById('main-swich-on')
+  const offIcon = document.getElementById('main-swich-off')
+  if(isOn){
+    onIcon.style.display = 'inline'
+    offIcon.style.display = 'none'
+    return
+  }
+  offIcon.style.display = 'inline'
+  onIcon.style.display = 'none'
 }
 
 function init() {
