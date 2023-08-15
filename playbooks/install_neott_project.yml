@@ -1,0 +1,120 @@
+- hosts: pi
+  become: true
+  tasks:
+    - name: Copy a file
+      copy:
+        src: "{{ item }}"
+        dest: "/home/{{ ansible_user }}/neott/"
+      with_items:
+        - "{{ playbook_dir }}/../main.py"
+        - "{{ playbook_dir }}/../config.yml"
+        - "{{ playbook_dir }}/../mqtt"
+        - "{{ playbook_dir }}/../strip"
+        - "{{ playbook_dir }}/../web"
+        - "{{ playbook_dir }}/../utils"
+
+    - name: Update APT package list
+      apt:
+        update_cache: yes
+
+    - name: Upgrade APT packages
+      apt:
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+
+    - name: Enable I2C
+      command: sudo raspi-config nonint do_i2c 0
+
+    - name: Enable SPI
+      command: sudo raspi-config nonint do_spi 0
+
+    - name: Enable Serial
+      command: sudo raspi-config nonint do_serial 0
+
+    - name: Enable Camera
+      command: sudo raspi-config nonint do_camera 0
+
+    - name: Disable raspi-config at Boot
+      command: sudo raspi-config nonint disable_raspi_config_at_boot 0
+
+    - name: install required APT packages
+      apt:
+        name:
+          - python3-pip
+          - i2c-tools
+          - libgpiod-dev
+        state: latest
+
+    - name: Upgrade setuptools using pip3
+      pip:
+        name: setuptools
+        state: latest
+        executable: pip3
+
+    - name: Install RPi.GPIO and adafruit-blinka packages
+      pip:
+        name:
+          - RPi.GPIO
+          - adafruit-blinka
+        state: latest
+        executable: pip3
+
+    - name: Install Python packages for NeoTT project
+      pip:
+        name:
+          - pyyaml
+          - adafruit-circuitpython-neopixel
+          - flask
+          - flask-socketio
+          - paho-mqtt
+        state: latest
+        executable: pip3
+
+    - name: Restart the Raspberry Pi
+      command: sudo reboot
+      async: 0
+      poll: 0
+      ignore_errors: true
+      become: true
+
+    - name: Wait for the Raspberry Pi to restart
+      wait_for_connection:
+        timeout: 300
+        delay: 10
+
+    - name: Reinstall adafruit-blinka using pip3
+      pip:
+        name: adafruit-blinka
+        state: forcereinstall
+        executable: pip3
+
+    - name: Create NeoTT systemd service file
+      copy:
+        content: |
+          [Unit]
+          Description=NeoTT
+          After=multi-user.target
+
+          [Service]
+          Type=simple
+          Restart=always
+          ExecStart=/bin/python /home/{{ ansible_user }}/neott/main.py
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/neott.service
+      notify:
+        - Reload systemd
+
+    - name: Start and enable the NeoTT service
+      systemd:
+        name: neott
+        enabled: yes
+        state: started
+
+  handlers:
+    - name: Reload systemd
+      systemd:
+        name: neott
+        state: reloaded
