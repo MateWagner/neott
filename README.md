@@ -28,8 +28,8 @@ The project uses [Request-Response Pattern][RRPattern-url]
 
 #### MQTT Request-Response Pattern
 It is a widely used practice in MQTT communication, and most of the clients support it.
-In my implementation, with the appropriate client, on every connection, the client gets the current state of the NeoTT and keeps synchronizing all the clients while they are connected to the Broker.  
-`Example:` The client sends a message to `path/topic` and over the Broker it's arriving at NeoTT. NeoTT will send the same data back on `path/topic/state` with the retain flag. During this time, the client waited for the acknowledgement to arrive on the state topic, and just when the acknowledgement arrived, it set the new state on itself.
+In my implementation, with the appropriate client, on every connection, the client gets the current state of the NeoTT and keeps synchronizing all the clients while they are connected to the Broker.  
+**Example:** The client sends a message to `path/topic` and over the Broker it's arriving at NeoTT. NeoTT will send the same data back on `path/topic/state` with the retain flag. During this time, the client waited for the acknowledgement to arrive on the state topic, and just when the acknowledgement arrived, it set the new state on itself.
 - Don't need to keep sessions  
 - Easy synchronization
 - Keep sync the Clients
