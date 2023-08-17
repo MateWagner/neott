@@ -71,16 +71,16 @@ ansible-playbook install_neott_project.yml
 ```
 ## Used Technologies
 
-- [![Raspberry][Raspberry-badge]][Raspberry-url]
-- [![NeoPixel][NeoPixel-badge]][NeoPixel-url]
-- [![Python][Python-badge]][Python-url]
-- [![Paho MQTT][PahoMQTT-badge]][PahoMQTT-url]
-- [![Flask][Flask-badge]][Flask-url]
-- [![SocketIo][SocketIo-badge]][SocketIo-url]
-- [![Java Script][JavaScript-badge]][JavaScript-url]
-- [![Bootstrap][Bootstrap-badge]][Bootstrap-url]
-- [![Mosquitto][Mosquitto-badge]][Mosquitto-url]
-- [![Ansible][Ansible-badge]][Ansible-url]
+[![Raspberry][Raspberry-badge]][Raspberry-url]  
+[![NeoPixel][NeoPixel-badge]][NeoPixel-url]  
+[![Python][Python-badge]][Python-url]  
+[![Paho MQTT][PahoMQTT-badge]][PahoMQTT-url]  
+[![Flask][Flask-badge]][Flask-url]  
+[![SocketIo][SocketIo-badge]][SocketIo-url]  
+[![Java Script][JavaScript-badge]][JavaScript-url]  
+[![Bootstrap][Bootstrap-badge]][Bootstrap-url]  
+[![Mosquitto][Mosquitto-badge]][Mosquitto-url]  
+[![Ansible][Ansible-badge]][Ansible-url]
 
 
 <!-- Badge links -->
