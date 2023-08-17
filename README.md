@@ -8,14 +8,14 @@ The project involves the integration of four technologies: MQTT client, Web Serv
 ## How to use
 
 ### MQTT
-The project uses [Request-Response Pattern][RRPattern-url] on multiple topics
+The project uses [Request-Response Pattern][RRPattern-url]
 
 #### MQTT Request-Response Pattern
-Widely used practice in MQTT communication most of the clients supports it.
-In my implementation with the appropriate client allows on every connection the client get the current state of the NeoTT and keep synchronized all the clients while they are connected to the Broker.  
-`Example:` Client send a message to `path/topic` and over the Broker it's arriving to NeoTT. NeoTT will send the same data back on `path/topic/state` with the retain flag. Client during this time waiting to the acknowledge to arrive on the state topic and just when the acknowledge arrived set the new state on itself
-- Don't need to keep sessions  
-- Easy synchronization 
+It is a widely used practice in MQTT communication, and most of the clients support it.
+In my implementation, with the appropriate client, on every connection, the client gets the current state of the NeoTT and keeps synchronizing all the clients while they are connected to the Broker.  
+`Example:` The client sends a message to `path/topic` and over the Broker it's arriving at NeoTT. NeoTT will send the same data back on `path/topic/state` with the retain flag. During this time, the client waited for the acknowledgement to arrive on the state topic, and just when the acknowledgement arrived, it set the new state on itself.
+- Don't need to keep sessions  
+- Easy synchronization
 - Keep sync the Clients
 
 | topic | value |
@@ -69,16 +69,19 @@ First, open the config.yml and fill up the NeoPixel details and the MQTT details
 cd ./playbook
 ansible-playbook install_neott_project.yml 
 ```
-## Used Technologies
+## Tech stack 
 
+### Hardware
 [![Raspberry][Raspberry-badge]][Raspberry-url]  
-[![NeoPixel][NeoPixel-badge]][NeoPixel-url]  
+[![NeoPixel][NeoPixel-badge]][NeoPixel-url]
+### Technologies  
 [![Python][Python-badge]][Python-url]  
 [![Paho MQTT][PahoMQTT-badge]][PahoMQTT-url]  
 [![Flask][Flask-badge]][Flask-url]  
 [![SocketIo][SocketIo-badge]][SocketIo-url]  
 [![Java Script][JavaScript-badge]][JavaScript-url]  
 [![Bootstrap][Bootstrap-badge]][Bootstrap-url]  
+### Software
 [![Mosquitto][Mosquitto-badge]][Mosquitto-url]  
 [![Ansible][Ansible-badge]][Ansible-url]
 
