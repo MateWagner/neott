@@ -5,6 +5,22 @@ This is a Raspberry Pi and Python-based IoT project designed to provide a seamle
 Imagine a scenario where someone arrives at your house and wants to turn your smart lights on or off. Traditionally, they would need to download an application to gain access and control the lights. In this project, I'm combining MQTT connectivity with a locally sourced web interface that stays in sync across all clients on every platform, allowing integration and automation via MQTT in a local environment.
 The project involves the integration of four technologies: MQTT client, Web Server, socketIO, Adafruit NeoPixel, and some basic light shows in the early stages of development.
 
+## Tech stack 
+
+### Hardware
+[![Raspberry][Raspberry-badge]][Raspberry-url] 
+[![NeoPixel][NeoPixel-badge]][NeoPixel-url]
+### Technologies  
+[![Python][Python-badge]][Python-url] 
+[![Paho MQTT][PahoMQTT-badge]][PahoMQTT-url] 
+[![Flask][Flask-badge]][Flask-url] 
+[![SocketIo][SocketIo-badge]][SocketIo-url] 
+[![Java Script][JavaScript-badge]][JavaScript-url] 
+[![Bootstrap][Bootstrap-badge]][Bootstrap-url]  
+### Software
+[![Mosquitto][Mosquitto-badge]][Mosquitto-url] 
+[![Ansible][Ansible-badge]][Ansible-url]
+
 ## How to use
 
 ### MQTT
@@ -18,6 +34,7 @@ In my implementation, with the appropriate client, on every connection, the clie
 - Easy synchronization
 - Keep sync the Clients
 
+#### Available Topics
 | topic | value |
 |---|---|
 | main_switch | String: ON / OFF |
@@ -40,6 +57,7 @@ To start the installation, you need to install Raspberry Pi OS Lite with some ad
   - Ansible also works on this connection.
   - Choose your Password wisely and follow best practices, even if the Pi doesn't hang out from your network.
 - Set up your WiFi network if you prefer that type of connection.
+
 ### Prepare Ansible
 Ansible is an Automation platform, it requires installation on your own system, aka 'control node' and some configuration to be able to run, but on the target, aka 'Managed node' it doesn't require more than an SSH connection. I use it in my project to copy necessary files, do configuration, and install dependencies on the Raspberry to be able to run the Project. For a completely localhost, you can install the Mosquito MQTT Server if needed.
 Some help to [install Ansible][InstallAnsible-url]. After installing, you need to configure your hosts and add the details of your Pi to be able to start the installation process.
@@ -47,7 +65,7 @@ Some help to [install Ansible][InstallAnsible-url]. After installing, you need t
 ```ini
   [pi] # Name of node in Ansible
   pi.local # Hostname or ip 
-    [pi:vars] # Node name and some variable for the node 
+  [pi:vars] # Node name and some variable for the node 
   ansible_user=username # Username what you give for the Pi installation
   ansible_ssh_pass=password # Password what you give for the Pi installation
   ansible_become=yes # To install and configure dependencies 
@@ -64,26 +82,19 @@ It's going to install and configure a Mosquito Server on the Pi without any User
 
 ### Configure And Install NeoTT
 Clone or download the project, open a terminal window in the `playbooks` folder, and run the command:
-First, open the config.yml and fill up the NeoPixel details and the MQTT details, and then run the Ansible Playbook from the playbook folder. It's going to take a while because it will update your Pi and restart it, but after that, you can go to the control page of the NeoTT `hostname.local:5000`
+First, open the config.yml and fill up the NeoPixel details and the MQTT details, and then run the Ansible Playbook from the playbook folder. It's going to take a while because it will update your Pi and restart it, but after that, you can go to the control page of the NeoTT `hostname.local:5000` or use via MQTT
 ```
 cd ./playbook
 ansible-playbook install_neott_project.yml 
 ```
-## Tech stack 
+If you want to turn off the start at boot open a terminal `sudo systemctl disable neott.service` and you can start and stop  `sudo systemctl start/stop neott.service`
 
-### Hardware
-[![Raspberry][Raspberry-badge]][Raspberry-url]  
-[![NeoPixel][NeoPixel-badge]][NeoPixel-url]
-### Technologies  
-[![Python][Python-badge]][Python-url]  
-[![Paho MQTT][PahoMQTT-badge]][PahoMQTT-url]  
-[![Flask][Flask-badge]][Flask-url]  
-[![SocketIo][SocketIo-badge]][SocketIo-url]  
-[![Java Script][JavaScript-badge]][JavaScript-url]  
-[![Bootstrap][Bootstrap-badge]][Bootstrap-url]  
-### Software
-[![Mosquitto][Mosquitto-badge]][Mosquitto-url]  
-[![Ansible][Ansible-badge]][Ansible-url]
+## Road Map
+
+[] - Separate concerns in System State Object  
+[] - Add unit tests  
+[] - Implement Request-Response Pattern on Socket.io  
+[] - Add input protections in MQTT Client  
 
 
 <!-- Badge links -->
