@@ -91,10 +91,10 @@ If you want to turn off the start at boot open a terminal `sudo systemctl disabl
 
 ## Road Map
 
-[] - Separate concerns in System State Object  
-[] - Add unit tests  
-[] - Implement Request-Response Pattern on Socket.io  
-[] - Add input protections in MQTT Client  
+[ ] - Add input protections in MQTT Client  
+[ ] - Separate concerns in System State Object  
+[ ] - Add unit tests  
+[ ] - Implement Request-Response Pattern on Socket.io  
 
 
 <!-- Badge links -->
