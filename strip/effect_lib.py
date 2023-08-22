@@ -1,14 +1,14 @@
-from utils.config_parser import NUM_PIXEL
-from utils.data_types import ColorRgbw
+from utils import config, ColorRgbw
 
 
 def fill_with_one_color(color_values):
-    return [color_values for i in range(NUM_PIXEL)]
+    return [color_values for i in range(config.NUM_PIXEL)]
 
 
 def rainbow_cycle(effect_control):
-    for pixel in range(NUM_PIXEL):
-        pixel_index = (pixel * 256 // NUM_PIXEL) + effect_control.wheel_pos
+    for pixel in range(config.NUM_PIXEL):
+        pixel_index = (pixel * 256 // config.NUM_PIXEL) + \
+            effect_control.wheel_pos
         color = wheel(pixel_index & 255)
         effect_control.neo_buffer[pixel] = color
 
