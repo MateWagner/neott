@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_socketio import SocketIO, emit
-from utils.data_types import SystemState
+from utils import SystemState
 
 
 def run_flask(state: SystemState):

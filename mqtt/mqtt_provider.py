@@ -1,8 +1,6 @@
 import paho.mqtt.client as mqtt
-from utils.log_provider import log
-import utils.config_parser as config_parser
+from utils import config, SystemState, log
 from mqtt.mqtt_bridge import TOPIC_CALLBACK_MAP, initial_value_publisher
-from utils.data_types import SystemState
 
 
 def on_connect(_client, _user_data, _flags, rc):
@@ -39,13 +37,13 @@ def on_log(_client, _user_data, _level, buf):
 
 def subscribe_to_topic_loop(client):
     for topic in TOPIC_CALLBACK_MAP:
-        client.subscribe(f'{config_parser.ROOT_TOPIC}{topic}')
+        client.subscribe(f'{config.ROOT_TOPIC}{topic}')
 
 
 def register_topic_callbacks(client):
     for topic_name, callback in TOPIC_CALLBACK_MAP.items():
         client.message_callback_add(
-            config_parser.ROOT_TOPIC + topic_name, callback)
+            config.ROOT_TOPIC + topic_name, callback)
 
 
 def start_loop(state: SystemState):
@@ -57,7 +55,7 @@ def start_loop(state: SystemState):
 
 
 def send_update_to_broker(topic, message) -> None:
-    mqtt_client.publish(f'{config_parser.ROOT_TOPIC}{topic}/state',
+    mqtt_client.publish(f'{config.ROOT_TOPIC}{topic}/state',
                         message, retain=True)
 
 
@@ -72,8 +70,8 @@ def mqtt_client_init():
 
     log.info('MQTT Client connecting...')
 
-    client.connect(config_parser.HOST, config_parser.PORT,
-                   config_parser.KEEP_ALIVE)
+    client.connect(config.HOST, config.PORT,
+                   config.KEEP_ALIVE)
 
     # Subscribe loop
     subscribe_to_topic_loop(client)

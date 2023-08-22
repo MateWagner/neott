@@ -1,6 +1,6 @@
 import board
 import neopixel
-import utils.config_parser as config
+from utils import config
 
 pixel_pin = getattr(board, config.PIN)
 num_pixels = config.NUM_PIXEL
