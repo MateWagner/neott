@@ -6,7 +6,7 @@ from utils.data_types import ColorRgbw, EffectControl, SystemState
 from utils.value_converter import get_rgbw
 
 
-def loop_forever(state: SystemState):
+def loop_forever(state: SystemState) -> None:
     log.info('Neopixel start')
 
     effect_control = EffectControl(
@@ -14,7 +14,7 @@ def loop_forever(state: SystemState):
 
     while True:
 
-        render_interrupt_event_and_start(state, effect_control)
+        render_interrupt_event(state, effect_control)
 
         log.debug('Neopixel: Show Type: %s Effect State: %s render on Index: %s',
                   state.show_type,  effect_control.effect_state, effect_control.effect_cycle_index)
@@ -42,7 +42,7 @@ def loop_forever(state: SystemState):
                 state.wake_up_event.clear()
 
 
-def render_interrupt_event_and_start(state, effect_control):
+def render_interrupt_event(state, effect_control):
     if state.render_interrupt_event.is_set():
         with state.lock:
             state.render_interrupt_event.clear()
