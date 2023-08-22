@@ -3,13 +3,13 @@ import utils.config_parser as config
 from utils.data_types import ColorRgbw
 
 
-def get_rgbw(hex_rgb):
+def get_rgbw(hex_rgb: str) -> ColorRgbw:
     red = 0
     green = 0
     blue = 0
     white = 0
 
-    if hex_rgb == '#FFFFFF' and 'W' in config.ORDER.upper():
+    if hex_rgb.upper() == '#FFFFFF' and 'W' in config.ORDER.upper():
         white = 255
     else:
         red = hex_to_rgb(hex_rgb)[0]

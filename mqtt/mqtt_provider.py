@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 from utils.log_provider import log
 import utils.config_parser as config_parser
 from mqtt.mqtt_bridge import TOPIC_CALLBACK_MAP, initial_value_publisher
+from utils.data_types import SystemState
 
 
 def on_connect(_client, _user_data, _flags, rc):
@@ -47,19 +48,20 @@ def register_topic_callbacks(client):
             config_parser.ROOT_TOPIC + topic_name, callback)
 
 
-def start_loop(state):
+def start_loop(state: SystemState):
     # update the Broker with the default values to the state topic with retain flag, when the program start
-    initial_value_publisher(mqttc, state)
-    mqttc.user_data_set(state)
-    mqttc.loop_forever(1)
+    initial_value_publisher(mqtt_client, state)
+    state.add_message_callback(send_update_to_broker)
+    mqtt_client.user_data_set(state)
+    mqtt_client.loop_forever(1)
 
 
-def send_update_to_broker(topic, message):
-    mqttc.publish(f'{config_parser.ROOT_TOPIC}{topic}/state',
-                  message, retain=True)
+def send_update_to_broker(topic, message) -> None:
+    mqtt_client.publish(f'{config_parser.ROOT_TOPIC}{topic}/state',
+                        message, retain=True)
 
 
-def mqtt_client():
+def mqtt_client_init():
     client = mqtt.Client()
     client.on_message = on_message
     client.on_connect = on_connect
@@ -80,4 +82,4 @@ def mqtt_client():
     return client
 
 
-mqttc = mqtt_client()
+mqtt_client = mqtt_client_init()

@@ -1,4 +1,5 @@
 from collections import namedtuple
+from collections.abc import Callable
 from threading import Event, Lock
 
 ColorRgbw = namedtuple(
@@ -7,8 +8,19 @@ ColorRgbw = namedtuple(
 default_color = ColorRgbw(255, 125, 255,)
 
 
+def auto_notify(method):
+    def wrapper(self, *args, **kwargs):
+        topic_name = method.__name__
+        value = args[0]
+        with self.lock:
+            result = method(self, *args, **kwargs)
+            self._message_sender.send_messages(topic_name, value)
+        return result
+    return wrapper
+
+
 class SystemState:
-    def __init__(self, send_update_to_mqtt, send_update_to_websocket):
+    def __init__(self, message_system):
         self.lock: Lock = Lock()
         self.render_interrupt_event: Event = Event()
         self.wake_up_event: Event = Event()
@@ -18,65 +30,59 @@ class SystemState:
         self._wait = 0.1
         self._hex_rgb = "#ff80ff"
         self._brightness = 1.0
-        self._send_update_to_mqtt = send_update_to_mqtt
-        self._send_update_to_websocket = send_update_to_websocket
+        self._message_sender: MessagingSystem = message_system
 
     @property
     def main_switch(self):
         return self._main_switch
 
     @main_switch.setter
+    @auto_notify
     def main_switch(self, value: str):
-        with self.lock:
-            self._main_switch = value
-            self._induce_render_cycle()
+        self._main_switch = value
+        self._induce_render_cycle()
 
     @property
     def hex_rgb(self):
         return self._hex_rgb
 
     @hex_rgb.setter
+    @auto_notify
     def hex_rgb(self, value: str):
-        with self.lock:
-            self._hex_rgb = value
-            self._induce_render_cycle()
+        self._hex_rgb = value.capitalize()
+        self._induce_render_cycle()
 
     @property
     def show_type(self):
         return self._show_type
 
     @show_type.setter
+    @auto_notify
     def show_type(self, value: str):
-        with self.lock:
-            self._show_type = value
-            self._induce_render_cycle()
+        self._show_type = value
+        self._induce_render_cycle()
 
     @property
     def brightness(self):
         return self._brightness
 
     @brightness.setter
+    @auto_notify
     def brightness(self, value: float):
-        with self.lock:
-            self._brightness = value
-            self._induce_wake_up()
+        self._brightness = value
+        self._induce_wake_up()
 
     @property
     def wait(self):
         return self._wait
 
     @wait.setter
+    @auto_notify
     def wait(self, value: float):
-        with self.lock:
-            self._wait = value
+        self._wait = value
 
-    def send_message_to_websocket(self, message):
-        with self.lock:
-            self._send_update_to_websocket(message)
-
-    def send_message_to_mqtt(self, topic, data):
-        with self.lock:
-            self._send_update_to_mqtt(topic, data)
+    def add_message_callback(self, callback: Callable[[str, str], None]) -> None:
+        self._message_sender.add_message_callback(callback)
 
     def _induce_render_cycle(self):
         self.render_interrupt_event.set()
@@ -91,8 +97,19 @@ class SystemState:
         return getattr(self, key)
 
     def __setitem__(self, key, value):
-        with self.lock:
-            setattr(self, key, value)
+        setattr(self, key, value)
+
+
+class MessagingSystem:
+    def __init__(self) -> None:
+        self._callback_list: list[Callable[[str, str], None]] = list([])
+
+    def add_message_callback(self, msg_callback: Callable[[str, str], None]) -> None:
+        self._callback_list.append(msg_callback)
+
+    def send_messages(self, topic: str, payload: str) -> None:
+        for msg_callback in self._callback_list:
+            msg_callback(topic, payload)
 
 
 class EffectControl:

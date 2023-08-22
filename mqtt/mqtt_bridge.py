@@ -3,29 +3,29 @@ import utils.log_provider as log
 from utils.data_types import SystemState
 
 
-def main_switch(client, state: SystemState, message):
+def main_switch(_client, state: SystemState, message):
     state.main_switch = message.payload.decode('utf-8').upper()
-    acknowledge_message(client, message, state)
+    log.arrived_message(message)
 
 
-def hex_rgb(client, state: SystemState, message):
+def hex_rgb(_client, state: SystemState, message):
     state.hex_rgb = message.payload.decode('utf-8')
-    acknowledge_message(client, message, state)
+    log.arrived_message(message)
 
 
-def show_type(client, state: SystemState, message):
+def show_type(_client, state: SystemState, message):
     state.show_type = message.payload.decode('utf-8').upper()
-    acknowledge_message(client, message, state)
+    log.arrived_message(message)
 
 
-def wait(client, state: SystemState, message):
+def wait(_client, state: SystemState, message):
     state.wait = float(message.payload)
-    acknowledge_message(client, message, state)
+    log.arrived_message(message)
 
 
-def brightness(client, state: SystemState, message):
+def brightness(_client, state: SystemState, message):
     state.brightness = float(message.payload)
-    acknowledge_message(client, message, state)
+    log.arrived_message(message)
 
 
 TOPIC_CALLBACK_MAP = {
@@ -35,12 +35,6 @@ TOPIC_CALLBACK_MAP = {
     'wait': wait,
     'brightness': brightness
 }
-
-
-def acknowledge_message(client, message, state: SystemState):
-    log.arrived_message(message)
-    state.send_message_to_websocket(message)
-    client.publish(message.topic + '/state', message.payload, retain=True)
 
 
 # update the Broker with the default values to the state topic with retain flag, when the program start
