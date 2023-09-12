@@ -1,32 +1,50 @@
 import time
+from functools import reduce
+import random
 import strip.effect_lib as effects
 import strip.render_lib as render
-from utils import log, ColorRgbw, EffectControl, SystemState, get_rgbw
+from utils import log, ColorRgbw, SystemState, ShowType, CycleState
 
 
 def loop_forever(state: SystemState) -> None:
-    log.info('Neopixel start')
+    render_cycle_list: list[render.RenderCycle] = render.render_cycle_factory()
+    effect_list: list[effects.BufferBuilder] = effects.effect_factory(state)
 
-    effect_control = EffectControl(
-        render.get_random_callback(), fill_neo_buffer(state))
+    effect_class: effects.BufferBuilder = get_effect(state, effect_list)
+    render_state: CycleState = CycleState.STOP
+    render_class: render.RenderCycle = render_cycle_list[random.randint(
+        0, len(render_cycle_list)-1)]
+
+    neo_buffer: list[ColorRgbw] = effects.black_color()
+
+    log.info('Neopixel start')
 
     while True:
 
-        render_interrupt_event(state, effect_control)
+        if is_render_interrupted(state):
+            render_state = CycleState.START
 
-        log.debug('Neopixel: Show Type: %s Effect State: %s render on Index: %s',
-                  state.show_type,  effect_control.effect_state, effect_control.effect_cycle_index)
+        log.debug('Neopixel: Show Type: %s Effect State: %s',
+                  state.show_type,  render_state)
 
         # set brightness
         render.set_brightness(state.brightness)
 
-        if effect_control.effect_state != 'STOP':
+        if render_state != CycleState.STOP:
 
-            if state.show_type == 'COLOR' or state.main_switch == 'OFF':
-                handle_solid_color_and_off(state, effect_control)
+            if render_state == CycleState.START:  # get build buffer when a new render cycle start
+                effect_class = get_effect(state, effect_list)
+                neo_buffer = get_buffer(state, effect_class)
 
-            if state.show_type == 'RAINBOW' and state.main_switch == 'ON':
-                handle_rainbow_cycle(effect_control)
+                render_class = render_cycle_list[random.randint(
+                    0, len(render_cycle_list)-1)]
+                render_class.render_firs_pixel(
+                    neo_buffer, effect_class.is_consecutive)
+                render_state = render_class.get_render_state()
+            else:
+                render_class.render_next_pixel(
+                    neo_buffer, effect_class.is_consecutive)
+                render_state = render_class.get_render_state()
 
             # sleep time on active render between pixels
             time.sleep(state.wait)
@@ -40,34 +58,29 @@ def loop_forever(state: SystemState) -> None:
                 state.wake_up_event.clear()
 
 
-def render_interrupt_event(state, effect_control):
+def is_render_interrupted(state) -> bool:
     if state.render_interrupt_event.is_set():
-        with state.lock:
+        with state.lock:  # TODO integrate to SystemState
             state.render_interrupt_event.clear()
-        effect_control.effect_state = 'START'
+        return True
+    return False
 
 
-def handle_rainbow_cycle(effect_control):
-    if effect_control.effect_state == 'START':
-        effect_control.render_callback = render.get_random_callback()
-        effects.rainbow_cycle(effect_control)
+def get_buffer(state: SystemState, effect_class: effects.BufferBuilder) -> list[ColorRgbw]:
+    if state.main_switch == 'OFF':  # handle off state
+        return effects.black_color()
 
-    render_next_pixel(effect_control, True)
-
-
-def handle_solid_color_and_off(state, effect_control):
-    if effect_control.effect_state == 'START':
-        effect_control.render_callback = render.get_random_callback()
-        effect_control.neo_buffer = fill_neo_buffer(state)
-
-    render_next_pixel(effect_control, False)
+    return effect_class.build_buffer()
 
 
-def render_next_pixel(effect_control, is_consecutive):
-    effect_control.render_callback(effect_control, is_consecutive)
+def get_effect(state: SystemState, effect_list: list[effects.BufferBuilder]) -> effects.BufferBuilder:
+    return reduce(lambda result, element: find_effect_class(
+        result, element, state.show_type), effect_list)
 
 
-def fill_neo_buffer(state):
-    return (effects.fill_with_one_color(ColorRgbw())
-            if state.main_switch == 'OFF'
-            else effects.fill_with_one_color(get_rgbw(state.hex_rgb)))
+def find_effect_class(result, element: effects.BufferBuilder, show_type: ShowType):
+    if element.name == show_type:
+        result = element
+        return result
+
+    return result

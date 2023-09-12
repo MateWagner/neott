@@ -1,5 +1,6 @@
 from collections import namedtuple
 from collections.abc import Callable
+from enum import Enum
 from threading import Event, Lock
 
 ColorRgbw = namedtuple(
@@ -8,13 +9,24 @@ ColorRgbw = namedtuple(
 default_color = ColorRgbw(255, 125, 255,)
 
 
+class ShowType(Enum):
+    COLOR = 1
+    RAINBOW = 2
+
+
+class CycleState(Enum):
+    START = 1
+    RUN = 2
+    STOP = 3
+
+
 def auto_notify(method):
     def wrapper(self, *args, **kwargs):
         topic_name = method.__name__
         value = args[0]
         with self.lock:
             result = method(self, *args, **kwargs)
-            self._message_sender.send_messages(topic_name, value)
+            self.notify_observers(topic_name, value)
         return result
     return wrapper
 
@@ -26,7 +38,7 @@ class SystemState:
         self.wake_up_event: Event = Event()
         self.loop_sleep_event: Event = Event()
         self._main_switch = 'OFF'
-        self._show_type = 'COLOR'
+        self._show_type: ShowType = ShowType.COLOR
         self._wait = 0.1
         self._hex_rgb = "#ff80ff"
         self._brightness = 1.0
@@ -59,7 +71,7 @@ class SystemState:
     @show_type.setter
     @auto_notify
     def show_type(self, value: str):
-        self._show_type = value
+        self._show_type = ShowType[value]
         self._induce_render_cycle()
 
     @property
@@ -83,6 +95,9 @@ class SystemState:
 
     def add_message_callback(self, callback: Callable[[str, str], None]) -> None:
         self._message_sender.add_message_callback(callback)
+
+    def notify_observers(self, topic_name, value):
+        self._message_sender.send_messages(topic_name, value)
 
     def _induce_render_cycle(self):
         self.render_interrupt_event.set()
@@ -112,11 +127,11 @@ class MessagingSystem:
             msg_callback(topic, payload)
 
 
-class EffectControl:
-    def __init__(self, render_callback, neo_buffer):
+class NeoLoopControl:
+    def __init__(self, render_index, neo_buffer):
         self.effect_cycle_index = 0
         self.previous_main_switch_state = 0
         self.wheel_pos = 0
-        self.render_callback = render_callback
+        self.render_index = render_index
         self.effect_state = "STOP"
         self.neo_buffer = neo_buffer
