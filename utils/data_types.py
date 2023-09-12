@@ -1,7 +1,8 @@
 from collections import namedtuple
 from collections.abc import Callable
-from enum import Enum
+from enum import Enum, auto
 from threading import Event, Lock
+from .log_provider import log
 
 ColorRgbw = namedtuple(
     'Color_rgbw', ['red', 'green', 'blue', 'white'], defaults=[0, 0, 0, 0])
@@ -10,14 +11,14 @@ default_color = ColorRgbw(255, 125, 255,)
 
 
 class ShowType(Enum):
-    COLOR = 1
-    RAINBOW = 2
+    COLOR = auto()
+    RAINBOW = auto()
 
 
 class CycleState(Enum):
-    START = 1
-    RUN = 2
-    STOP = 3
+    START = auto()
+    RUN = auto()
+    STOP = auto()
 
 
 def auto_notify(method):
@@ -71,7 +72,11 @@ class SystemState:
     @show_type.setter
     @auto_notify
     def show_type(self, value: str):
-        self._show_type = ShowType[value]
+        try:
+            self._show_type = ShowType[value]
+        except KeyError:
+            log.error("Invalid show_type: %s. Valid values are %s",
+                      value, ', '.join(e.name for e in ShowType))
         self._induce_render_cycle()
 
     @property
