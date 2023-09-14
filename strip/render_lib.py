@@ -1,54 +1,53 @@
-import random
 import strip.neopixel_provider as neo
+from utils import ColorRgbw, CycleState, RenderCycle
 
 
-def get_random_callback():
-    i = random.randint(0, 1)
-    if i == 0:
-        return transition_left_to_right
-    elif i == 1:
-        return transition_right_to_left
+class FaderFrontToBack(RenderCycle):
+    def __init__(self) -> None:
+        super().__init__(neo)
+        self._index: int = 0
+
+    def render_firs_pixel(self, neo_buffer: list[ColorRgbw]) -> None:
+        self._index = 0
+        self._cycle_state = CycleState.RUN
+        self.render_next_pixel(neo_buffer)
+
+    def render_next_pixel(self, neo_buffer: list[ColorRgbw], is_consecutive: bool = False) -> None:
+        self.render_at_index(self._index, neo_buffer[self._index])
+
+        self._index += 1
+
+        if self._index is self._neo.pixels.n-1:
+            self._cycle_state = CycleState.START if is_consecutive else CycleState.STOP
 
 
-def transition_left_to_right(effect_control, is_consecutive):
-    effect_state_update = 'RUN'
+class FaderBackToFront(RenderCycle):
+    def __init__(self) -> None:
+        super().__init__(neo)
+        self._index = self._neo.pixels.n-1
 
-    if effect_control.effect_state == 'START':
-        effect_control.effect_cycle_index = 0
+    def render_firs_pixel(self, neo_buffer: list[ColorRgbw]) -> None:
+        self._index = self._neo.pixels.n-1
+        self._cycle_state = CycleState.RUN
+        self.render_next_pixel(neo_buffer)
 
-    render_at_index(effect_control)
+    def render_next_pixel(self, neo_buffer: list[ColorRgbw], is_consecutive: bool = False) -> None:
+        self.render_at_index(self._index, neo_buffer[self._index])
 
-    if effect_control.effect_cycle_index == neo.pixels.n-1:
-        effect_state_update = "START" if is_consecutive else "STOP"
+        self._index -= 1
 
-    effect_control.effect_state = effect_state_update
-    effect_control.effect_cycle_index += 1
-
-
-def transition_right_to_left(effect_control, is_consecutive):
-    effect_state_update = 'RUN'
-
-    if effect_control.effect_state == 'START':
-        effect_control.effect_cycle_index = neo.pixels.n-1
-
-    render_at_index(effect_control)
-
-    if effect_control.effect_cycle_index == 0:
-        effect_state_update = "START" if is_consecutive else "STOP"
-
-    effect_control.effect_state = effect_state_update
-    effect_control.effect_cycle_index -= 1
+        if self._index == 0:
+            self._cycle_state = CycleState.START if is_consecutive else CycleState.STOP
 
 
 def set_brightness(value):
-    if (value != neo.pixels.brightness):
+    if value is not neo.pixels.brightness:
         neo.pixels.brightness = value
         neo.pixels.show()
 
 
-def render_at_index(effect_control):
-    rgbw = effect_control.neo_buffer[effect_control.effect_cycle_index]
-
-    neo.pixels[effect_control.effect_cycle_index] = (
-        (rgbw.red, rgbw.green, rgbw.blue, rgbw.white))
-    neo.pixels.show()
+def render_cycle_factory() -> list[RenderCycle]:
+    return [
+        FaderBackToFront(),
+        FaderFrontToBack()
+    ]
