@@ -1,86 +1,77 @@
 import time
-from functools import reduce
 import random
-import strip.effect_lib as effects
-import strip.render_lib as render
-from utils import log, ColorRgbw, SystemState, ShowType, CycleState
+from utils import log, ColorRgbw, SystemState, ShowType, CycleState, \
+    MainSwitchState, NeoLoopControl, RenderCycle, BufferBuilder
+from .render_lib import render_cycle_factory, set_brightness
+from .effect_lib import drew_off, effect_factory
 
 
-def loop_forever(state: SystemState) -> None:
-    render_cycle_list: list[render.RenderCycle] = render.render_cycle_factory()
-    effect_list: list[effects.BufferBuilder] = effects.effect_factory(state)
-
-    effect_class: effects.BufferBuilder = get_effect(state, effect_list)
-    render_state: CycleState = CycleState.STOP
-    render_class: render.RenderCycle = render_cycle_list[random.randint(
-        0, len(render_cycle_list)-1)]
-
-    neo_buffer: list[ColorRgbw] = effects.black_color()
-
+def start(state: SystemState) -> None:
     log.info('Neopixel start')
+    loop_control = NeoLoopControl(render_cycle_factory(),
+                                  effect_factory(state), drew_off())
+    loop_forever(state, loop_control)
 
+
+def loop_forever(state: SystemState, control: NeoLoopControl) -> None:
     while True:
 
-        if is_render_interrupted(state):
-            render_state = CycleState.START
+        if state.is_render_interrupted():
+            control.render_state = CycleState.START
 
-        log.debug('Neopixel: Show Type: %s Effect State: %s',
-                  state.show_type,  render_state)
+        set_brightness(state.brightness)
 
-        # set brightness
-        render.set_brightness(state.brightness)
+        is_render_cycle_start = control.render_state is CycleState.START
+        has_new_effect_in_use = state.show_type is not control.current_effect.name
 
-        if render_state != CycleState.STOP:
+        log.debug('Neopixel: Show Type: %s, Effect State: %s, Effect Class %s',
+                  state.show_type,  control.render_state, type(control.current_effect))
 
-            if render_state == CycleState.START:  # get build buffer when a new render cycle start
-                effect_class = get_effect(state, effect_list)
-                neo_buffer = get_buffer(state, effect_class)
+        if has_new_effect_in_use:
+            control.current_effect = get_effect(
+                state.show_type, control.effect_list)
 
-                render_class = render_cycle_list[random.randint(
-                    0, len(render_cycle_list)-1)]
-                render_class.render_firs_pixel(
-                    neo_buffer, effect_class.is_consecutive)
-                render_state = render_class.get_render_state()
-            else:
-                render_class.render_next_pixel(
-                    neo_buffer, effect_class.is_consecutive)
-                render_state = render_class.get_render_state()
-
-            # sleep time on active render between pixels
-            time.sleep(state.wait)
+        if is_render_cycle_start:
+            control.neo_buffer = drew_new_buffer(
+                state.main_switch, control.current_effect)
+            control.current_renderer = get_random_render_cycle(
+                control.render_cycle_list)
+            control.current_renderer.render_firs_pixel(control.neo_buffer)
 
         else:
-            log.info('Neopixel finished with task waiting to trigger')
-            with state.lock:
-                state.loop_sleep_event.set()
+            render_next_pixel(state.main_switch, control)
+
+        control.render_state = control.current_renderer.get_render_state()
+
+        # sleep time on active render between pixels
+        time.sleep(state.wait)
+
+        is_render_cycle_stopped = control.render_state is CycleState.STOP
+        if is_render_cycle_stopped:
+            log.debug('Neopixel finished with task waiting to trigger')
+            state.set_loop_is_stopped_event()
             state.wake_up_event.wait()
-            with state.lock:
-                state.wake_up_event.clear()
+            state.clear_wakeup_event()
 
 
-def is_render_interrupted(state) -> bool:
-    if state.render_interrupt_event.is_set():
-        with state.lock:  # TODO integrate to SystemState
-            state.render_interrupt_event.clear()
-        return True
-    return False
+def render_next_pixel(main_switch: MainSwitchState, control: NeoLoopControl) -> None:
+    if main_switch is MainSwitchState.OFF:
+        control.current_renderer.render_next_pixel(
+            control.neo_buffer)
+    else:
+        control.current_renderer.render_next_pixel(
+            control.neo_buffer, control.current_effect.is_consecutive)
 
 
-def get_buffer(state: SystemState, effect_class: effects.BufferBuilder) -> list[ColorRgbw]:
-    if state.main_switch == 'OFF':  # handle off state
-        return effects.black_color()
-
-    return effect_class.build_buffer()
-
-
-def get_effect(state: SystemState, effect_list: list[effects.BufferBuilder]) -> effects.BufferBuilder:
-    return reduce(lambda result, element: find_effect_class(
-        result, element, state.show_type), effect_list)
+def drew_new_buffer(main_switch: MainSwitchState, current_effect: BufferBuilder) -> list[ColorRgbw]:
+    if main_switch is MainSwitchState.OFF:
+        return drew_off()
+    return current_effect.drew_buffer()
 
 
-def find_effect_class(result, element: effects.BufferBuilder, show_type: ShowType):
-    if element.name == show_type:
-        result = element
-        return result
+def get_random_render_cycle(render_cycle_list: list[RenderCycle]) -> RenderCycle:
+    return random.choice(render_cycle_list)
 
-    return result
+
+def get_effect(show_type: ShowType, effect_list: list[BufferBuilder]) -> BufferBuilder:
+    return next((effect for effect in effect_list if effect.name == show_type), effect_list[0])

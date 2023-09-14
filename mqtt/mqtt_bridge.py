@@ -38,11 +38,11 @@ TOPIC_CALLBACK_MAP = {
 # update the Broker with the default values to the state topic with retain flag, when the program start
 def initial_value_publisher(mqtt_client, state):
     mqtt_client.publish(f'{config.ROOT_TOPIC}main_switch/state',
-                        str(state.main_switch), retain=True)
+                        str(state.main_switch.name), retain=True)
     mqtt_client.publish(f'{config.ROOT_TOPIC}hex_rgb/state',
                         str(state.hex_rgb), retain=True)
     mqtt_client.publish(f'{config.ROOT_TOPIC}show_type/state',
-                        str(state.show_type), retain=True)
+                        str(state.show_type.name), retain=True)
     mqtt_client.publish(f'{config.ROOT_TOPIC}wait/state',
                         str(state.wait), retain=True)
     mqtt_client.publish(f'{config.ROOT_TOPIC}brightness/state',

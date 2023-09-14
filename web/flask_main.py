@@ -36,11 +36,11 @@ def run_flask(state: SystemState):
 
     @socket.on('connect')
     def on_connect():
-        emit('main_switch', state.main_switch)
+        emit('main_switch', state.main_switch.name)
         emit('hex_rgb', state.hex_rgb)
         emit('brightness', state.brightness)
         emit('wait', state.wait)
-        emit('show_type', state.show_type)
+        emit('show_type', state.show_type.name)
 
     def send_update_to_websocket(topic, message):
         socket.emit(topic, message)
