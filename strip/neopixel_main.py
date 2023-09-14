@@ -10,48 +10,48 @@ def start(state: SystemState) -> None:
     log.info('Neopixel start')
     loop_control = NeoLoopControl(render_cycle_factory(),
                                   effect_factory(state), drew_off())
-    loop_forever(state, loop_control)
+
+    while True:
+        loop_forever(state, loop_control)
 
 
 def loop_forever(state: SystemState, control: NeoLoopControl) -> None:
-    while True:
+    if state.is_render_interrupted():
+        control.render_state = CycleState.START
 
-        if state.is_render_interrupted():
-            control.render_state = CycleState.START
+    set_brightness(state.brightness)
 
-        set_brightness(state.brightness)
+    is_render_cycle_start = control.render_state is CycleState.START
+    has_new_effect_in_use = state.show_type is not control.current_effect.name
 
-        is_render_cycle_start = control.render_state is CycleState.START
-        has_new_effect_in_use = state.show_type is not control.current_effect.name
+    log.debug('Neopixel: Show Type: %s, Effect State: %s, Effect Class %s',
+              state.show_type,  control.render_state, type(control.current_effect))
 
-        log.debug('Neopixel: Show Type: %s, Effect State: %s, Effect Class %s',
-                  state.show_type,  control.render_state, type(control.current_effect))
+    if has_new_effect_in_use:
+        control.current_effect = get_effect(
+            state.show_type, control.effect_list)
 
-        if has_new_effect_in_use:
-            control.current_effect = get_effect(
-                state.show_type, control.effect_list)
+    if is_render_cycle_start:
+        control.neo_buffer = drew_new_buffer(
+            state.main_switch, control.current_effect)
+        control.current_renderer = get_random_render_cycle(
+            control.render_cycle_list)
+        control.current_renderer.render_firs_pixel(control.neo_buffer)
 
-        if is_render_cycle_start:
-            control.neo_buffer = drew_new_buffer(
-                state.main_switch, control.current_effect)
-            control.current_renderer = get_random_render_cycle(
-                control.render_cycle_list)
-            control.current_renderer.render_firs_pixel(control.neo_buffer)
+    else:
+        render_next_pixel(state.main_switch, control)
 
-        else:
-            render_next_pixel(state.main_switch, control)
+    control.render_state = control.current_renderer.get_render_state()
 
-        control.render_state = control.current_renderer.get_render_state()
+    # sleep time on active render between pixels
+    time.sleep(state.wait)
 
-        # sleep time on active render between pixels
-        time.sleep(state.wait)
-
-        is_render_cycle_stopped = control.render_state is CycleState.STOP
-        if is_render_cycle_stopped:
-            log.debug('Neopixel finished with task waiting to trigger')
-            state.set_loop_is_stopped_event()
-            state.wake_up_event.wait()
-            state.clear_wakeup_event()
+    is_render_cycle_stopped = control.render_state is CycleState.STOP
+    if is_render_cycle_stopped:
+        log.debug('Neopixel finished with task waiting to trigger')
+        state.set_loop_is_stopped_event()
+        state.wake_up_event.wait()
+        state.clear_wakeup_event()
 
 
 def render_next_pixel(main_switch: MainSwitchState, control: NeoLoopControl) -> None:
