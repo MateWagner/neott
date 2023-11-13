@@ -17,7 +17,7 @@ class FaderFrontToBack(RenderCycle):
 
         self._index += 1
 
-        if self._index is self._neo.pixels.n-1:
+        if self._index is self._neo.pixels.n:
             self._cycle_state = CycleState.START if is_consecutive else CycleState.STOP
 
 
@@ -36,7 +36,7 @@ class FaderBackToFront(RenderCycle):
 
         self._index -= 1
 
-        if self._index == 0:
+        if self._index == -1:
             self._cycle_state = CycleState.START if is_consecutive else CycleState.STOP
 
 

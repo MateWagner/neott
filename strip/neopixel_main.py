@@ -34,16 +34,21 @@ def loop_forever(state: SystemState, control: NeoLoopControl) -> None:
     if is_render_cycle_start:
         control.neo_buffer = drew_new_buffer(
             state.main_switch, control.current_effect)
+
         control.current_renderer = get_random_render_cycle(
             control.render_cycle_list)
         control.current_renderer.render_firs_pixel(control.neo_buffer)
 
     else:
-        render_next_pixel(state.main_switch, control)
+        render_next_pixel(state.main_switch,
+                          control.current_renderer,
+                          control.neo_buffer,
+                          control.is_effect_consecutive()
+                          )
 
     control.render_state = control.current_renderer.get_render_state()
 
-    # sleep time on active render between pixels
+    # sleep time on active render, between pixels
     time.sleep(state.wait)
 
     is_render_cycle_stopped = control.render_state is CycleState.STOP
@@ -54,13 +59,12 @@ def loop_forever(state: SystemState, control: NeoLoopControl) -> None:
         state.clear_wakeup_event()
 
 
-def render_next_pixel(main_switch: MainSwitchState, control: NeoLoopControl) -> None:
+def render_next_pixel(main_switch: MainSwitchState, render: RenderCycle,
+                      neo_buffer: list[ColorRgbw], is_consecutive: bool) -> None:
     if main_switch is MainSwitchState.OFF:
-        control.current_renderer.render_next_pixel(
-            control.neo_buffer)
+        render.render_next_pixel(neo_buffer)
     else:
-        control.current_renderer.render_next_pixel(
-            control.neo_buffer, control.current_effect.is_consecutive)
+        render.render_next_pixel(neo_buffer, is_consecutive)
 
 
 def drew_new_buffer(main_switch: MainSwitchState, current_effect: BufferBuilder) -> list[ColorRgbw]:
