@@ -32,7 +32,7 @@ class MainSwitchState(Enum):
 class BufferBuilder(ABC):
     def __init__(self, name, is_consecutive: bool = False) -> None:
         self._name: ShowType = name
-        self._is_consecutive = is_consecutive
+        self._is_consecutive: bool = is_consecutive
 
     @property
     def name(self):
@@ -152,6 +152,7 @@ class SystemState:
         if 0 <= value <= 1:
             self._brightness = value
             self._induce_wake_up()
+            print(f"{value} ertek !!!!!!!!!!!!!!!!!!!!!!!!!!!")
         else:
             raise ValueError(
                 f"Invalid brightness: {value}.Value must be between 0 and 1")
@@ -167,7 +168,7 @@ class SystemState:
             self._wait = value
         else:
             raise ValueError(
-                f"Invalid wait: {value}.Value must be between 0 and 1")
+                f"Invalid wait: {value}. Value must be between 0 and 1")
 
     def add_message_callback(self, callback: Callable[[str, str], None]) -> None:
         self._message_sender.add_message_callback(callback)
@@ -194,7 +195,7 @@ class SystemState:
         self._render_interrupt_event.set()
         self._induce_wake_up()
 
-    def _induce_wake_up(self):
+    def _induce_wake_up(self) -> None:
         if self.loop_sleep_event.is_set():
             self.loop_sleep_event.clear()
             self.wake_up_event.set()
@@ -219,7 +220,7 @@ class MessagingSystem:
 
 
 class NeoLoopControl:
-    def __init__(self, render_cycle_list, effect_list, neo_buffer):
+    def __init__(self, render_cycle_list, effect_list, neo_buffer=[]):
         self._render_cycle_list: list[RenderCycle] = render_cycle_list
         self._effect_list: list[BufferBuilder] = effect_list
         self.current_effect: BufferBuilder = effect_list[0]
@@ -234,3 +235,6 @@ class NeoLoopControl:
     @property
     def effect_list(self) -> list[BufferBuilder]:
         return self._effect_list
+
+    def is_effect_consecutive(self) -> bool:
+        return self.current_effect.is_consecutive

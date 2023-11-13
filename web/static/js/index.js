@@ -1,17 +1,68 @@
+const WAIT_TO_RESPONSE = 3;
+
 function arriveEvent(socket, topic) {
-  socket.on(String(topic), (data) => {
+  socket.on(String(`${topic}/state`), (data) => {
     const item = document.getElementById(String(topic));
     item.value = data;
+    removeTimer(item);
+    setServerStateAttribute(item, data);
   });
+}
+
+function removeTimer(item) {
+  if (item.hasAttribute("data-timer-id")) {
+    clearTimeout(item.getAttribute("data-timer-id"));
+    item.removeAttribute("data-timer-id");
+  }
+}
+
+function setServerStateAttribute(item, data) {
+  item.setAttribute("data-server-state", data);
+}
+
+function resetValue(item) {
+  item.value = item.getAttribute("data-server-state");
+  removeTimer(item);
+  addAlert();
+}
+
+function resetChecked(item) {
+  const serverState = item.getAttribute("data-server-state") === "ON";
+  changeMainSwitchIcon(serverState);
+  item.checked = serverState;
+  addAlert();
+  removeTimer(item);
+}
+
+function addAlert() {
+  const alertRootDiv = document.getElementById("alert");
+  const alert = document.createElement("div");
+  alert.classList.add("alert");
+  alert.classList.add("alert-danger");
+  alert.classList.add("alert-dismissible");
+  alert.role = "alert";
+  alert.innerText = `Server time out: ${WAIT_TO_RESPONSE}s`;
+  const close = document.createElement("button");
+  close.classList.add("btn-close");
+  close.setAttribute("data-bs-dismiss", "alert");
+  close.setAttribute("aria-label", "Close");
+  close.addEventListener("click", () => (alertRootDiv.innerHTML = ""));
+  alert.appendChild(close);
+  alertRootDiv.appendChild(alert);
+}
+
+function fallBackTimer(item, callback) {
+  return setTimeout(() => callback(item), WAIT_TO_RESPONSE * 1000);
 }
 
 // Event listener for sending messages to the server
 function returnData(socket, event) {
-  const topicName = event.target.id;
-  const value = isNaN(event.target.value)
-    ? event.target.value
-    : Number(event.target.value);
+  const item = event.target;
+  const topicName = item.id;
+  const value = isNaN(item.value) ? item.value : Number(item.value);
   socket.emit(topicName, value);
+  const timeoutId = fallBackTimer(item, resetValue);
+  item.setAttribute("data-timer-id", timeoutId);
 }
 
 function returnEvent(socket, topic) {
@@ -21,14 +72,19 @@ function returnEvent(socket, topic) {
 
 function handleMainSwitch(socket) {
   const mainSwitch = document.getElementById("main_switch");
-  mainSwitch.addEventListener("change", (e) => {
-    const switchState = e.target.checked ? "ON" : "OFF";
-    changeMainSwichIcon(e.target.checked)
+  mainSwitch.addEventListener("change", (event) => {
+    const item = event.target;
+    const switchState = item.checked ? "ON" : "OFF";
+    changeMainSwitchIcon(item.checked);
     socket.emit("main_switch", switchState);
+    const timeoutId = fallBackTimer(item, resetChecked);
+    item.setAttribute("data-timer-id", timeoutId);
   });
-  socket.on("main_switch", (data) => {
+  socket.on("main_switch/state", (data) => {
     mainSwitch.checked = data === "ON";
-    changeMainSwichIcon(data === "ON")
+    changeMainSwitchIcon(data === "ON");
+    removeTimer(mainSwitch);
+    setServerStateAttribute(mainSwitch, data);
   });
 }
 
@@ -53,16 +109,16 @@ function getSystemTheme() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-function changeMainSwichIcon(isOn) {
-  const onIcon = document.getElementById('main-swich-on')
-  const offIcon = document.getElementById('main-swich-off')
-  if(isOn){
-    onIcon.style.display = 'inline'
-    offIcon.style.display = 'none'
-    return
+function changeMainSwitchIcon(isOn) {
+  const onIcon = document.getElementById("main-swich-on");
+  const offIcon = document.getElementById("main-swich-off");
+  if (isOn) {
+    onIcon.style.display = "inline";
+    offIcon.style.display = "none";
+    return;
   }
-  offIcon.style.display = 'inline'
-  onIcon.style.display = 'none'
+  offIcon.style.display = "inline";
+  onIcon.style.display = "none";
 }
 
 function init() {
