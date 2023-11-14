@@ -8,6 +8,7 @@ default_color = ColorRgbw(255, 125, 255,)
 
 
 class ShowType(Enum):
+    OFF = auto()
     COLOR = auto()
     RAINBOW = auto()
 

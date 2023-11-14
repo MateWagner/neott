@@ -6,11 +6,10 @@ from .render_lib import render_cycle_factory
 
 class TurnOff(BufferBuilderRandom):
     def __init__(self, render_cycle_list, system_state) -> None:
-        super().__init__(ShowType.COLOR, system_state, render_cycle_list)
+        super().__init__(ShowType.OFF, system_state, render_cycle_list)
 
     def _drew_buffer(self) -> None:
-        self._neo_buffer = [ColorRgbw(0, 0, 0, 0)
-                            for i in range(config.NUM_PIXEL)]
+        self._neo_buffer = [ColorRgbw() for i in range(config.NUM_PIXEL)]
 
 
 class OneColor(BufferBuilderRandom):
@@ -59,10 +58,6 @@ class RainbowCycle(BufferBuilderRandom):
             green = int(pos * 3)
             blue = int(255 - pos * 3)
         return ColorRgbw(red, green, blue)
-
-
-def drew_off() -> list[ColorRgbw]:
-    return [ColorRgbw(0, 0, 0, 0) for i in range(config.NUM_PIXEL)]
 
 
 def effect_factory(state: SystemState) -> list[BufferBuilder]:

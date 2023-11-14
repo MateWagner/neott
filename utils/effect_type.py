@@ -25,6 +25,10 @@ class BufferBuilder(ABC):
     def is_render_finished(self) -> bool:
         return self._render_cycle.is_render_finished
 
+    @property
+    def _is_render_start(self) -> bool:
+        return self._render_cycle.is_render_start
+
     @abstractmethod
     def _drew_buffer(self) -> None:
         pass
@@ -44,12 +48,13 @@ class BufferBuilderRandom(BufferBuilder):
         self._render_cycle = random.choice(self._list_of_render_cycle)
 
     def render(self) -> None:
-        if self.is_render_finished:
-            return
-        if self._system_state.is_render_interrupted():
+        if self._system_state.is_render_interrupted() or self._is_render_start:
             self._drew_buffer()
             self._set_new_random_render_cycle()
-            self._render_cycle.render_firs_pixel(self._neo_buffer)
-        else:
-            self._render_cycle.render_next_pixel(
-                self._neo_buffer, self._is_consecutive)
+            self._render_cycle.initialise()
+
+        if self.is_render_finished:
+            return
+
+        self._render_cycle.render(
+            self._neo_buffer, self._is_consecutive)

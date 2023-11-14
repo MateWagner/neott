@@ -16,10 +16,15 @@ class NeoLoopControl:
     def current_effect(self) -> BufferBuilder:
         return self._current_effect
 
-    @property
     def is_render_finished(self) -> bool:
         return self.current_effect.is_render_finished
 
-    def set_new_effect(self, show_type: ShowType) -> None:
+    def set_effect(self, show_type: ShowType, is_on: bool) -> None:
+        if not is_on:
+            self._current_effect = self._turn_off_effect
+            return
+
+        if self._current_effect.is_name_match(show_type):
+            return
         self._current_effect = next(
             (effect for effect in self._effect_list if effect.is_name_match(show_type)), self._effect_list[0])

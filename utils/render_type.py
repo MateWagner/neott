@@ -12,12 +12,16 @@ class RenderCycle(ABC):
     def is_render_finished(self) -> bool:
         return self._cycle_state == CycleState.STOP
 
+    @property
+    def is_render_start(self) -> bool:
+        return self._cycle_state == CycleState.START
+
     @abstractmethod
-    def render_firs_pixel(self, neo_buffer: list[ColorRgbw]) -> None:
+    def initialise(self) -> None:
         pass
 
     @abstractmethod
-    def render_next_pixel(self, neo_buffer: list[ColorRgbw], is_consecutive: bool = False) -> None:
+    def render(self, neo_buffer: list[ColorRgbw], is_consecutive: bool = False) -> None:
         pass
 
     @abstractmethod

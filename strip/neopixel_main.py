@@ -18,24 +18,16 @@ def loop_forever(state: SystemState, control: NeoLoopControl) -> None:
 
     set_brightness(state.brightness)
 
-    has_new_effect_in_use = not control.current_effect.is_name_match(
-        state.show_type)
+    log.debug('Neopixel: Show Type: %s, Main Switch State: %s, is_on: %s, Effect Class %s',
+              state.show_type, state.main_switch, state.is_on, type(control.current_effect))
 
-    # log.debug('Neopixel: Show Type: %s, Effect State: %s, Effect Class %s',
-    #           state.show_type,  control.render_state, type(control.current_effect))
-
-    if has_new_effect_in_use:
-        control.set_new_effect(state.show_type)
-
-    if state.is_on:
-        control.current_effect.render()
-    else:
-        control.turn_off_effect.render()
+    control.set_effect(state.show_type, state.is_on)
+    control.current_effect.render()
 
     # sleep time on active render, between pixels
     time.sleep(state.wait)
 
-    if control.is_render_finished:
+    if control.is_render_finished():
         log.debug('Neopixel finished with task waiting to trigger')
         state.set_loop_is_stopped_event()
         state.wake_up_event.wait()
