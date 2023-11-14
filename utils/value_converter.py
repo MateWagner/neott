@@ -1,6 +1,6 @@
 import re
-from utils import ColorRgbw
-from utils.config_parser import ORDER
+from .config_parser import ORDER
+from .enums import ColorRgbw
 
 
 def get_rgbw(hex_rgb: str) -> ColorRgbw:

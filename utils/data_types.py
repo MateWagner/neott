@@ -1,72 +1,11 @@
-from collections import namedtuple
 from collections.abc import Callable
-from enum import Enum, auto
 from threading import Event, Lock
 import re
-from abc import ABC, abstractmethod
 from .log_provider import log
-
-
-ColorRgbw = namedtuple(
-    'Color_rgbw', ['red', 'green', 'blue', 'white'], defaults=[0, 0, 0, 0])
-
-default_color = ColorRgbw(255, 125, 255,)
-
-
-class ShowType(Enum):
-    COLOR = auto()
-    RAINBOW = auto()
-
-
-class CycleState(Enum):
-    START = auto()
-    RUN = auto()
-    STOP = auto()
-
-
-class MainSwitchState(Enum):
-    ON = auto()
-    OFF = auto()
-
-
-class BufferBuilder(ABC):
-    def __init__(self, name, is_consecutive: bool = False) -> None:
-        self._name: ShowType = name
-        self._is_consecutive: bool = is_consecutive
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def is_consecutive(self):
-        return self._is_consecutive
-
-    @abstractmethod
-    def drew_buffer(self) -> list[ColorRgbw]:
-        pass
-
-
-class RenderCycle(ABC):
-    def __init__(self, neo_pixel_instance) -> None:
-        self._neo = neo_pixel_instance
-        self._cycle_state: CycleState = CycleState.STOP
-
-    @abstractmethod
-    def render_firs_pixel(self, neo_buffer: list[ColorRgbw]) -> None:
-        pass
-
-    @abstractmethod
-    def render_next_pixel(self, neo_buffer: list[ColorRgbw], is_consecutive: bool = False) -> None:
-        pass
-
-    def render_at_index(self, index: int,  color: ColorRgbw) -> None:
-        self._neo.pixels[index] = (
-            (color.red, color.green, color.blue, color.white))
-        self._neo.pixels.show()
-
-    def get_render_state(self) -> CycleState:
-        return self._cycle_state
+from .value_converter import get_rgbw
+from .enums import ColorRgbw
+from .enums import ShowType
+from .enums import MainSwitchState
 
 
 def auto_notify(method):
@@ -99,6 +38,10 @@ class SystemState:
         self._message_sender: MessagingSystem = message_system
 
     @property
+    def is_on(self) -> bool:
+        return self._main_switch == MainSwitchState.ON
+
+    @property
     def main_switch(self):
         return self._main_switch
 
@@ -111,6 +54,10 @@ class SystemState:
         except KeyError as exc:
             raise ValueError(
                 f"Invalid main_switch: {value}. Valid values are {', '.join(e.name for e in MainSwitchState)}") from exc
+
+    @property
+    def get_rgb_value(self) -> ColorRgbw:
+        return get_rgbw(self._hex_rgb)  # TODO inject dependency
 
     @property
     def hex_rgb(self):
@@ -152,7 +99,6 @@ class SystemState:
         if 0 <= value <= 1:
             self._brightness = value
             self._induce_wake_up()
-            print(f"{value} ertek !!!!!!!!!!!!!!!!!!!!!!!!!!!")
         else:
             raise ValueError(
                 f"Invalid brightness: {value}.Value must be between 0 and 1")
@@ -217,24 +163,3 @@ class MessagingSystem:
     def send_messages(self, topic: str, payload: str) -> None:
         for msg_callback in self._callback_list:
             msg_callback(topic, payload)
-
-
-class NeoLoopControl:
-    def __init__(self, render_cycle_list, effect_list, neo_buffer=[]):
-        self._render_cycle_list: list[RenderCycle] = render_cycle_list
-        self._effect_list: list[BufferBuilder] = effect_list
-        self.current_effect: BufferBuilder = effect_list[0]
-        self.render_state: CycleState = CycleState.STOP
-        self.current_renderer: RenderCycle = render_cycle_list[0]
-        self.neo_buffer: list[ColorRgbw] = neo_buffer
-
-    @property
-    def render_cycle_list(self) -> list[RenderCycle]:
-        return self._render_cycle_list
-
-    @property
-    def effect_list(self) -> list[BufferBuilder]:
-        return self._effect_list
-
-    def is_effect_consecutive(self) -> bool:
-        return self.current_effect.is_consecutive

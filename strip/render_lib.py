@@ -13,10 +13,12 @@ class FaderFrontToBack(RenderCycle):
         self.render_next_pixel(neo_buffer)
 
     def render_next_pixel(self, neo_buffer: list[ColorRgbw], is_consecutive: bool = False) -> None:
-        self.render_at_index(self._index, neo_buffer[self._index])
+        self._render_at_index(self._index, neo_buffer[self._index])
 
         self._index += 1
+        self._set_cycle_state(is_consecutive)
 
+    def _set_cycle_state(self, is_consecutive: bool) -> None:
         if self._index is self._neo.pixels.n:
             self._cycle_state = CycleState.START if is_consecutive else CycleState.STOP
 
@@ -32,10 +34,12 @@ class FaderBackToFront(RenderCycle):
         self.render_next_pixel(neo_buffer)
 
     def render_next_pixel(self, neo_buffer: list[ColorRgbw], is_consecutive: bool = False) -> None:
-        self.render_at_index(self._index, neo_buffer[self._index])
+        self._render_at_index(self._index, neo_buffer[self._index])
 
         self._index -= 1
+        self._set_cycle_state(is_consecutive)
 
+    def _set_cycle_state(self, is_consecutive: bool) -> None:
         if self._index == -1:
             self._cycle_state = CycleState.START if is_consecutive else CycleState.STOP
 

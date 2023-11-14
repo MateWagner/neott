@@ -1,34 +1,45 @@
 
-from utils import config, ColorRgbw, SystemState, get_rgbw, ShowType, BufferBuilder
+from utils import config, ColorRgbw, SystemState, \
+    ShowType, BufferBuilder, BufferBuilderRandom
+from .render_lib import render_cycle_factory
 
 
-class OneColor(BufferBuilder):
-    def __init__(self, system_state) -> None:
-        super().__init__(ShowType.COLOR)
-        self._system_state: SystemState = system_state
+class TurnOff(BufferBuilderRandom):
+    def __init__(self, render_cycle_list, system_state) -> None:
+        super().__init__(ShowType.COLOR, system_state, render_cycle_list)
 
-    def drew_buffer(self) -> list[ColorRgbw]:
-        color = get_rgbw(self._system_state.hex_rgb)
-        return [color for i in range(config.NUM_PIXEL)]
+    def _drew_buffer(self) -> None:
+        self._neo_buffer = [ColorRgbw(0, 0, 0, 0)
+                            for i in range(config.NUM_PIXEL)]
 
 
-class RainbowCycle(BufferBuilder):
-    def __init__(self) -> None:
-        super().__init__(ShowType.RAINBOW, True)
+class OneColor(BufferBuilderRandom):
+    def __init__(self, render_cycle_list, system_state) -> None:
+        super().__init__(ShowType.COLOR, system_state, render_cycle_list)
+
+    def _drew_buffer(self) -> None:
+        color = self._system_state.get_rgb_value
+        self._neo_buffer = [color for i in range(config.NUM_PIXEL)]
+
+
+class RainbowCycle(BufferBuilderRandom):
+    def __init__(self, render_cycle_list, system_state) -> None:
+        super().__init__(ShowType.RAINBOW, system_state, render_cycle_list, True)
         self._wheel_position: int = 0
 
-    def drew_buffer(self) -> list[ColorRgbw]:
+    def _drew_buffer(self) -> None:
         buffer: list[ColorRgbw] = []
 
         for pixel in range(config.NUM_PIXEL):
             pixel_index = (pixel * 256 // config.NUM_PIXEL) + \
                 self._wheel_position
-            color = self.__wheel((pixel_index & 255))
+            color = self._wheel((pixel_index & 255))
             buffer.append(color)
         self._wheel_position = ((self._wheel_position+1) & 255)
-        return buffer
 
-    def __wheel(self, pos):
+        self._neo_buffer = buffer
+
+    def _wheel(self, pos):
         # Input a value 0 to 255 to get a color value.
         # The colors are a transition r - g - b - back to r.
         if pos < 0 or pos > 255:
@@ -56,6 +67,6 @@ def drew_off() -> list[ColorRgbw]:
 
 def effect_factory(state: SystemState) -> list[BufferBuilder]:
     return [
-        OneColor(state),
-        RainbowCycle()
+        OneColor(render_cycle_factory(), state),
+        RainbowCycle(render_cycle_factory(), state)
     ]
