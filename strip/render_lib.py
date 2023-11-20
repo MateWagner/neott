@@ -1,5 +1,5 @@
 import strip.neopixel_provider as neo_instance
-from utils import ColorRgbw, CycleState, RenderCycle
+from utils import ColorRgbw, CycleState, RenderCycle, log
 
 
 class FaderFrontToBack(RenderCycle):
@@ -7,11 +7,15 @@ class FaderFrontToBack(RenderCycle):
         super().__init__(neo)
         self._index: int = 0
 
-    def initialise(self) -> None:
+    def _initialise(self) -> None:
         self._index = 0
         self._cycle_state = CycleState.RUN
 
     def render(self, neo_buffer: list[ColorRgbw], is_consecutive: bool = False) -> None:
+        if self.is_render_start:
+            self._initialise()
+        log.debug('Render cycle name: %s, index: %s',
+                  self.__class__, self._index)
         self._render_at_index(self._index, neo_buffer[self._index])
 
         self._index += 1
@@ -27,11 +31,15 @@ class FaderBackToFront(RenderCycle):
         super().__init__(neo)
         self._index = self._neo.pixels.n-1
 
-    def initialise(self) -> None:
+    def _initialise(self) -> None:
         self._index = self._neo.pixels.n-1
         self._cycle_state = CycleState.RUN
 
     def render(self, neo_buffer: list[ColorRgbw], is_consecutive: bool = False) -> None:
+        if self.is_render_start:
+            self._initialise()
+        log.debug('Render cycle name: %s, index: %s',
+                  self.__class__, self._index)
         self._render_at_index(self._index, neo_buffer[self._index])
 
         self._index -= 1

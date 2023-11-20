@@ -17,7 +17,7 @@ class RenderCycle(ABC):
         return self._cycle_state == CycleState.START
 
     @abstractmethod
-    def initialise(self) -> None:
+    def _initialise(self) -> None:
         pass
 
     @abstractmethod
@@ -35,3 +35,6 @@ class RenderCycle(ABC):
 
     def get_render_state(self) -> CycleState:
         return self._cycle_state
+
+    def set_cycle_start(self):
+        self._cycle_state = CycleState.START
