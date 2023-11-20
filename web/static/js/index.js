@@ -99,9 +99,9 @@ function handleThemeChange() {
     .addEventListener("change", ({ matches }) => {
       if (matches) {
         setTheme(true);
-      } else {
-        setTheme(false);
+        return;
       }
+      setTheme(false);
     });
 }
 
@@ -121,11 +121,28 @@ function changeMainSwitchIcon(isOn) {
   onIcon.style.display = "none";
 }
 
+function showTypeFactory(socket) {
+  socket.on("show_type/list", createAndAddOptions);
+}
+
+function createAndAddOptions(showTypeList) {
+  select_element = document.getElementById("show_type");
+  select_element.innerHTML = "";
+
+  for (key of Object.keys(showTypeList)) {
+    option = document.createElement("option");
+    option.label = showTypeList[key];
+    option.value = key;
+    select_element.appendChild(option);
+  }
+}
+
 function init() {
   const socket = io();
   setTheme(getSystemTheme());
   handleThemeChange();
   handleMainSwitch(socket);
+  showTypeFactory(socket);
   const topics = {
     hex_rgb: "hex_rgb",
     show_type: "show_type",

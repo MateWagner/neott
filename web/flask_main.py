@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_socketio import SocketIO, emit
-from utils import SystemState
+from utils import SystemState, ShowType
 
 
 def run_flask(state: SystemState):
@@ -41,6 +41,7 @@ def run_flask(state: SystemState):
         emit('brightness/state', state.brightness)
         emit('wait/state', state.wait)
         emit('show_type/state', state.show_type.name)
+        emit('show_type/list', ShowType.get_show_type_dict())
 
     def send_update_to_websocket(topic, message):
         socket.emit(topic+"/state", message)
