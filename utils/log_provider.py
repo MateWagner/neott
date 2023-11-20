@@ -1,7 +1,8 @@
 import logging
+from . import config_parser as config
 # TODO maybe can integrate into mqtt client
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.DEBUG if config.DEBUG else logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
