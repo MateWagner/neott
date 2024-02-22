@@ -40,8 +40,8 @@ def run_flask(state: SystemState):
         emit('hex_rgb/state', state.hex_rgb)
         emit('brightness/state', state.brightness)
         emit('wait/state', state.wait)
-        emit('show_type/state', state.show_type.name)
         emit('show_type/list', ShowType.get_show_type_dict())
+        emit('show_type/state', state.show_type.name)
 
     def send_update_to_websocket(topic, message):
         socket.emit(topic+"/state", message)

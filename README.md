@@ -93,8 +93,8 @@ If you want to turn off the start at boot open a terminal `sudo systemctl disabl
 
 - [X] Add input protection  
 - [X] Separate concerns in System State Object  
-- [ ] Add unit tests  
-- [ ] Implement Request-Response Pattern on Socket.io  
+- [X] Implement Request-Response Pattern on Socket.io  
+- [ ] Add unit tests for neo loop
 
 
 <!-- Badge links -->

@@ -1,22 +1,23 @@
 import random
 from pytest_mock import MockerFixture
 from pytest import MonkeyPatch
-from utils import SystemState, MessagingSystem, NeoLoopControl, CycleState, MainSwitchState, ShowType
-import strip.effect_lib as effect_lib
+from utils import SystemState, MessagingSystem, CycleState, MainSwitchState, ShowType
+import strip.show_lib as show_lib, 
 import strip.render_lib as render_lib
-from strip.neopixel_main import loop_forever, get_effect, get_random_render_cycle
+from strip.neopixel_main import loop_forever
 
 # sudo python -m pytest --cov=strip -v tests/
+# def set_brightness
 
 
 def test_interrupt_render_state_turn_to_run(monkeypatch: MonkeyPatch):
     msgs = MessagingSystem()
     state = SystemState(msgs)
     monkeypatch.setattr(state, 'is_render_interrupted', lambda: True)
-    effect_list = effect_lib.effect_factory(state)
+    named_show_list = show_lib.named_show_factory(state)
     render_list = render_lib.render_cycle_factory()
-    control = NeoLoopControl(render_list, effect_list, effect_lib.drew_off())
-    loop_forever(state, control)
+        
+    loop_forever(state, named_show_list, )
     assert control.render_state is CycleState.RUN
 
 
@@ -25,9 +26,9 @@ def test_render_is_interrupted_neo_buffer_changes_on_on_state(monkeypatch: Monke
     state = SystemState(msgs)
     monkeypatch.setattr(state, 'is_render_interrupted', lambda: True)
     monkeypatch.setattr(state, '_main_switch', MainSwitchState.ON)
-    effect_list = effect_lib.effect_factory(state)
+    effect_list = show_lib.named_show_factory(state)
     render_list = render_lib.render_cycle_factory()
-    start_buffer = effect_lib.drew_off()
+    start_buffer = show_lib.drew_off()
     control = NeoLoopControl(render_list, effect_list, start_buffer)
     loop_forever(state, control)
 
@@ -41,9 +42,9 @@ def test_show_type_default_color(monkeypatch: MonkeyPatch):
     state = SystemState(msgs)
     monkeypatch.setattr(state, 'is_render_interrupted', lambda: True)
     monkeypatch.setattr(state, '_main_switch', MainSwitchState.ON)
-    effect_list = effect_lib.effect_factory(state)
+    effect_list = show_lib.named_show_factory(state)
     render_list = render_lib.render_cycle_factory()
-    start_buffer = effect_lib.drew_off()
+    start_buffer = show_lib.drew_off()
     control = NeoLoopControl(render_list, effect_list, start_buffer)
     loop_forever(state, control)
 
@@ -55,21 +56,22 @@ def test_show_type_change_to_rainbow(monkeypatch: MonkeyPatch):
     state = SystemState(msgs)
     monkeypatch.setattr(state, 'is_render_interrupted', lambda: True)
     monkeypatch.setattr(state, '_main_switch', MainSwitchState.ON)
-    monkeypatch.setattr(state, '_show_type', ShowType.RAINBOW)
-    effect_list = effect_lib.effect_factory(state)
+    monkeypatch.setattr(state, '_show_type', ShowType.RAINBOW_LOOP)
+    effect_list = show_lib.named_show_factory(state)
     render_list = render_lib.render_cycle_factory()
-    start_buffer = effect_lib.drew_off()
+    start_buffer = show_lib.drew_off()
     control = NeoLoopControl(render_list, effect_list, start_buffer)
     loop_forever(state, control)
 
-    assert control.current_effect.name is ShowType.RAINBOW
+    assert control.current_effect.name is ShowType.RAINBOW_LOOP
 
 
 def test_get_effect_from_list_with_show_type():
     msgs = MessagingSystem()
     state = SystemState(msgs)
-    effect_list = effect_lib.effect_factory(state)
-    assert get_effect(ShowType.RAINBOW, effect_list).name is ShowType.RAINBOW
+    effect_list = show_lib.named_show_factory(state)
+    assert get_effect(ShowType.RAINBOW_LOOP,
+                      effect_list).name is ShowType.RAINBOW_LOOP
 
 
 def test_get_random_render_cycle(monkeypatch):
@@ -82,9 +84,9 @@ def test_get_random_render_cycle(monkeypatch):
 def test_when_cycle_stop_then_wait_to_wakeup(mocker: MockerFixture, monkeypatch: MonkeyPatch):
     msgs = MessagingSystem()
     state = SystemState(msgs)
-    effect_list = effect_lib.effect_factory(state)
+    effect_list = show_lib.named_show_factory(state)
     render_list = render_lib.render_cycle_factory()
-    control = NeoLoopControl(render_list, effect_list, effect_lib.drew_off())
+    control = NeoLoopControl(render_list, effect_list, show_lib.drew_off())
 
     mocker.patch.object(state.wake_up_event, 'wait')
     # monkeypatch.setattr(state.wake_up_event, 'wait', lambda: False)
