@@ -66,7 +66,7 @@ def mqtt_client_init():
     client.on_publish = on_publish
     client.on_subscribe = on_subscribe
     # Uncomment to enable debug messages
-    # mqttc.on_log = on_log
+    # client.on_log = on_log
 
     log.info('MQTT Client connecting...')
 

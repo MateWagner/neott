@@ -1,3 +1,4 @@
+from paho.mqtt.client import Client
 from utils import config, SystemState, arrived_message
 
 
@@ -36,7 +37,7 @@ TOPIC_CALLBACK_MAP = {
 
 
 # update the Broker with the default values to the state topic with retain flag, when the program start
-def initial_value_publisher(mqtt_client, state):
+def initial_value_publisher(mqtt_client: Client, state):
     mqtt_client.publish(f'{config.ROOT_TOPIC}main_switch/state',
                         str(state.main_switch.name), retain=True)
     mqtt_client.publish(f'{config.ROOT_TOPIC}hex_rgb/state',

@@ -31,4 +31,3 @@ PASS = conf['MQTT']['PASS']
 # dev
 DEBUG = conf['DEV']['DEBUG']
 
-# print(ROOT_TOPIC + '/dsa')
